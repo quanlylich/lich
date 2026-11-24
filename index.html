@@ -6325,7 +6325,10 @@
       }
       if (j.khachHang && j.khachHang.trim() !== '' && (!selectedStatus || j.tinhTrang === selectedStatus)) {
         const cName = j.khachHang.trim();
-        custMap.set(cName, (custMap.get(cName) || 0) + 1);
+        const cKey = cName.toLocaleLowerCase('vi');
+        const currentCustomer = custMap.get(cKey);
+        if (currentCustomer) currentCustomer.count += 1;
+        else custMap.set(cKey, { name: cName, count: 1 });
       }
       const execName = (j.nguoiThucHien || '').trim();
       if (execName && (j.congViec || j.khachHang) && (!selectedCostStatus || normalizeQrCostStatus(j.ttChiPhi) === selectedCostStatus)) {
@@ -6333,7 +6336,7 @@
       }
     });
 
-    qrUnpaidCustomersCache = Array.from(custMap.entries()).map(([name, count]) => ({ name, count }));
+    qrUnpaidCustomersCache = Array.from(custMap.values());
     qrExecutorsCache = Array.from(execMap.entries()).map(([name, count]) => ({ name, count }));
 
     filterQrCustomerDropdown(preferredCust);
