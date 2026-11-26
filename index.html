@@ -2341,7 +2341,7 @@
 
 <!-- Modal Thêm / Sửa Công việc -->
 <div class="modal fade" id="jobModal" tabindex="-1">
-  <div class="modal-dialog modal-dialog-centered">
+  <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable">
     <div class="modal-content">
       <div class="modal-header">
         <h6 class="modal-title" id="modalTitle">Thêm công việc mới</h6>
@@ -2358,8 +2358,16 @@
               <select class="form-select form-select-sm fw-bold" name="maDangNhap" id="formMaDangNhap"></select>
             </div>
             <div class="col-12 mb-2">
-              <label class="form-label">Ngày thực hiện</label>
-              <input type="date" class="form-control fw-semibold" name="ngay" id="formNgay" required autocomplete="off">
+              <div class="d-flex align-items-center justify-content-between mb-1">
+                <label class="form-label mb-0" id="primaryJobSectionLabel">Ngày thực hiện</label>
+                <span id="multiJobCountBadge" class="badge rounded-pill d-none" style="background: #fff1f2; color: #7b1113; border: 1px solid #fecdd3; font-size: 11px;">1 công việc</span>
+              </div>
+              <div class="d-flex align-items-center gap-2">
+                <input type="date" class="form-control fw-semibold" name="ngay" id="formNgay" style="width: 168px; max-width: calc(100% - 48px); flex: 0 0 auto;" required autocomplete="off">
+                <button type="button" id="btnAddExtraJobEntry" class="btn fw-bold d-inline-flex align-items-center justify-content-center" style="width: 39px; height: 39px; padding: 0; border-radius: 10px; border: 1px solid #fecdd3; background: #fff1f2; color: #7b1113; flex: 0 0 auto;" onclick="addExtraJobEntry()" title="Thêm công việc với ngày thực hiện khác" aria-label="Thêm công việc với ngày thực hiện khác">
+                  <i data-lucide="plus"></i>
+                </button>
+              </div>
             </div>
           </div>
 
@@ -2436,6 +2444,8 @@
               <div id="chipsChiPhi" class="money-quick-chips"></div>
             </div>
           </div>
+
+          <div id="extraJobEntriesContainer" class="mt-3 d-none"></div>
         </form>
       </div>
       <div class="modal-footer justify-content-between">
@@ -2934,6 +2944,13 @@
     return days[d.getDay()] || "";
   }
 
+  const COST_STATUS_OPTIONS = ["Chưa thanh toán", "Đã thanh toán"];
+
+  function normalizeCostStatusLabel(value) {
+    const normalized = String(value || '').trim().toLocaleLowerCase('vi');
+    return (normalized === 'đã trả' || normalized === 'đã thanh toán') ? 'Đã thanh toán' : 'Chưa thanh toán';
+  }
+
   function buildFilteredJobsFromMap(mapObj, authUsername) {
     const cleanUser = normalizeUsername(authUsername);
     const admin = isAdminAccount;
@@ -2943,6 +2960,7 @@
 
     const list = [];
     const autoOverdueIds = [];
+    const autoCostNormalizeList = [];
 
     Object.keys(mapObj || {}).forEach((key, idx) => {
       const item = mapObj[key];
@@ -2975,6 +2993,13 @@
       const cVal = Number(item.luuTruChiPhi || parseMoney(item.chiPhi)) || 0;
       const lVal = gVal - cVal;
 
+      const rawCostStatus = String(item.ttChiPhi || "").trim();
+      const normalizedCostStatus = normalizeCostStatusLabel(rawCostStatus);
+      if (rawCostStatus !== normalizedCostStatus) {
+        item.ttChiPhi = normalizedCostStatus;
+        autoCostNormalizeList.push({ key: key, val: normalizedCostStatus });
+      }
+
       const numericId = Number(item.rowNumber) || (idx + 2);
       list.push({
         firebaseKey: key,
@@ -2991,7 +3016,7 @@
         giaTri: formatMoneyVn(gVal),
         daCoc: formatMoneyVn(cCoc),
         chiPhi: formatMoneyVn(cVal),
-        ttChiPhi: String(item.ttChiPhi || "Chưa trả").trim(),
+        ttChiPhi: normalizedCostStatus,
         luuTruGiaTri: gVal,
         luuTruDaCoc: cCoc,
         luuTruChiPhi: cVal,
@@ -3000,11 +3025,12 @@
       });
     });
 
-    if (autoOverdueIds.length > 0) {
+    if (autoOverdueIds.length > 0 || autoCostNormalizeList.length > 0) {
       const dbUrl = getFirebaseDbUrl();
       if (!dbUrl.includes("DÁN_LINK_FIREBASE")) {
         const patchObj = {};
         autoOverdueIds.forEach(k => { patchObj[k + "/tinhTrang"] = "Chưa TT"; });
+        autoCostNormalizeList.forEach(entry => { patchObj[entry.key + "/ttChiPhi"] = entry.val; });
         firebaseFetch(dbUrl + "/jobs.json", {
           method: "PATCH",
           headers: { "Content-Type": "application/json" },
@@ -3535,72 +3561,80 @@
       return { success: true, username: targetUser, code: targetPass, displayName: targetUser };
     }
 
-    if (action === "saveJobData") {
-      const form = args[0];
-      const parts = String(form.ngay).split("-");
-      const formattedDate = `${parts[2].padStart(2, '0')}/${parts[1].padStart(2, '0')}/${parts[0]}`;
-      const thu = computeVietnameseWeekday(formattedDate);
+    if (action === "saveJobData" || action === "saveMultipleJobsData") {
+      const formsList = action === "saveMultipleJobsData"
+        ? (Array.isArray(args[0]) ? args[0] : [])
+        : [args[0]];
 
-      const gVal = parseMoney(form.giaTri);
-      const cCoc = parseMoney(form.daCoc);
-      const cVal = parseMoney(form.chiPhi);
-      const congViecFormatted = capitalizeFirstLetter(form.congViec);
-      const khachHangFormatted = capitalizeAllWords(form.khachHang);
-      const nguoiThucHien = capitalizeAllWords(form.nguoiThucHien || "");
-      const tinhTrang = String(form.tinhTrang || "Chờ").trim();
-      const chiTietClean = stripNoteTag(form.chiTiet || "").replace(/\[MAP:[^\]]*\]/g, "").trim();
-      const mapLinkClean = String(form.mapLink || "").trim();
-      const ghiChuClean = String(form.ghiChu || "").trim();
+      const baseTimestamp = Date.now();
+      for (let i = 0; i < formsList.length; i++) {
+        const form = formsList[i];
+        if (!form || !form.ngay) continue;
+        const parts = String(form.ngay).split("-");
+        const formattedDate = `${parts[2].padStart(2, '0')}/${parts[1].padStart(2, '0')}/${parts[0]}`;
+        const thu = computeVietnameseWeekday(formattedDate);
 
-      let existingKey = null;
-      let existingItem = null;
-      if (form.rowNumber) {
-        const foundEntry = Object.entries(firebaseJobsMap).find(([k, v]) => v && Number(v.rowNumber) === Number(form.rowNumber));
-        if (foundEntry) {
-          existingKey = foundEntry[0];
-          existingItem = foundEntry[1];
+        const gVal = parseMoney(form.giaTri);
+        const cCoc = parseMoney(form.daCoc);
+        const cVal = parseMoney(form.chiPhi);
+        const congViecFormatted = capitalizeFirstLetter(form.congViec);
+        const khachHangFormatted = capitalizeAllWords(form.khachHang);
+        const nguoiThucHien = capitalizeAllWords(form.nguoiThucHien || "");
+        const tinhTrang = String(form.tinhTrang || "Chờ").trim();
+        const chiTietClean = stripNoteTag(form.chiTiet || "").replace(/\[MAP:[^\]]*\]/g, "").trim();
+        const mapLinkClean = String(form.mapLink || "").trim();
+        const ghiChuClean = String(form.ghiChu || "").trim();
+
+        let existingKey = null;
+        let existingItem = null;
+        if (form.rowNumber) {
+          const foundEntry = Object.entries(firebaseJobsMap).find(([k, v]) => v && Number(v.rowNumber) === Number(form.rowNumber));
+          if (foundEntry) {
+            existingKey = foundEntry[0];
+            existingItem = foundEntry[1];
+          }
         }
-      }
 
-      const ownerUser = isAdminAccount
-        ? (normalizeUsername(form.maDangNhap) || (existingItem && normalizeUsername(existingItem.maDangNhap)) || cleanUser)
-        : ((existingItem && normalizeUsername(existingItem.maDangNhap)) || cleanUser);
+        const ownerUser = isAdminAccount
+          ? (normalizeUsername(form.maDangNhap) || (existingItem && normalizeUsername(existingItem.maDangNhap)) || cleanUser)
+          : ((existingItem && normalizeUsername(existingItem.maDangNhap)) || cleanUser);
 
-      const newRowNum = existingItem ? Number(existingItem.rowNumber) : (Date.now());
-      const payload = {
-        rowNumber: newRowNum,
-        thu: thu,
-        ngay: formattedDate,
-        congViec: congViecFormatted,
-        chiTiet: chiTietClean,
-        mapLink: mapLinkClean,
-        ghiChu: ghiChuClean,
-        khachHang: khachHangFormatted,
-        nguoiThucHien: nguoiThucHien,
-        tinhTrang: tinhTrang,
-        luuTruGiaTri: gVal,
-        luuTruDaCoc: cCoc,
-        luuTruChiPhi: cVal,
-        ttChiPhi: existingItem ? (existingItem.ttChiPhi || "Chưa trả") : "Chưa trả",
-        maDangNhap: ownerUser
-      };
+        const newRowNum = existingItem ? Number(existingItem.rowNumber) : (baseTimestamp + i);
+        const payload = {
+          rowNumber: newRowNum,
+          thu: thu,
+          ngay: formattedDate,
+          congViec: congViecFormatted,
+          chiTiet: chiTietClean,
+          mapLink: mapLinkClean,
+          ghiChu: ghiChuClean,
+          khachHang: khachHangFormatted,
+          nguoiThucHien: nguoiThucHien,
+          tinhTrang: tinhTrang,
+          luuTruGiaTri: gVal,
+          luuTruDaCoc: cCoc,
+          luuTruChiPhi: cVal,
+          ttChiPhi: existingItem ? normalizeCostStatusLabel(existingItem.ttChiPhi) : "Chưa thanh toán",
+          maDangNhap: ownerUser
+        };
 
-      if (existingKey) {
-        await firebaseFetch(`${dbUrl}/jobs/${existingKey}.json`, {
-          method: "PUT",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify(payload)
-        });
-        firebaseJobsMap[existingKey] = payload;
-      } else {
-        const postRes = await firebaseFetch(`${dbUrl}/jobs.json`, {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify(payload)
-        });
-        const postJson = await postRes.json();
-        if (postJson && postJson.name) {
-          firebaseJobsMap[postJson.name] = payload;
+        if (existingKey) {
+          await firebaseFetch(`${dbUrl}/jobs/${existingKey}.json`, {
+            method: "PUT",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(payload)
+          });
+          firebaseJobsMap[existingKey] = payload;
+        } else {
+          const postRes = await firebaseFetch(`${dbUrl}/jobs.json`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(payload)
+          });
+          const postJson = await postRes.json();
+          if (postJson && postJson.name) {
+            firebaseJobsMap[postJson.name] = payload;
+          }
         }
       }
       return buildFilteredJobsFromMap(firebaseJobsMap, cleanUser);
@@ -5244,6 +5278,7 @@
   function clearAllFilters() {
     document.getElementById('searchTableInput').value = '';
     document.getElementById('filterMonthTable').value = '';
+    selectedAdminAuthFilter = '';
     const authSel = document.getElementById('filterAuthCodeCalendar');
     if (authSel) authSel.value = '';
     filterJobTypeVal = '';
@@ -5468,8 +5503,10 @@
       .batchUpdateStatus(targetRows, chosenStatus);
   }
 
-  function toggleCostStatus(targetRowNumber, checkboxEl) {
-    const newCostStatus = checkboxEl.checked ? "Đã thanh toán" : "Chưa trả";
+  let selectedAdminAuthFilter = null;
+
+  function changeCostStatusValue(targetRowNumber, chosenCostStatus) {
+    const newCostStatus = normalizeCostStatusLabel(chosenCostStatus);
     const selectedRows = getSelectedRowNumbers();
 
     let targetRows = [targetRowNumber];
@@ -5477,10 +5514,11 @@
       targetRows = selectedRows;
     }
 
-    // Cập nhật ngay trên bộ nhớ cục bộ để đồng bộ realtime SSE không làm mất dòng khi renderMasterTable chạy lại
+    const previousValues = new Map();
     targetRows.forEach(rNum => {
       const localJob = allJobs.find(item => Number(item.rowNumber) === Number(rNum));
       if (localJob) {
+        previousValues.set(rNum, normalizeCostStatusLabel(localJob.ttChiPhi));
         localJob.ttChiPhi = newCostStatus;
       }
       const foundEntry = Object.entries(firebaseJobsMap || {}).find(([k, v]) => v && Number(v.rowNumber) === Number(rNum));
@@ -5489,25 +5527,25 @@
       }
     });
 
+    renderMasterTable();
+
     google.script.run
       .withSuccessHandler(function() {
-        // Cập nhật các dòng hiện có, không thay toàn bộ danh sách bằng phản hồi có thể rỗng hoặc cũ.
         targetRows.forEach(rNum => {
           const localJob = allJobs.find(item => Number(item.rowNumber) === Number(rNum));
           if (localJob) localJob.ttChiPhi = newCostStatus;
         });
         renderMasterTable();
-        showToast((checkboxEl.checked ? 'Đã thanh toán chi phí' : 'Đã bỏ tích chi phí') + (targetRows.length > 1 ? ' (' + targetRows.length + ' công việc)' : ''));
+        showToast(`Đã chuyển TT Chi phí sang "${newCostStatus}"` + (targetRows.length > 1 ? ` (${targetRows.length} công việc)` : ''));
       })
-      .withFailureHandler(function(err) {
-        showToast("Lỗi cập nhật chi phí", true);
-        checkboxEl.checked = !checkboxEl.checked;
-        const revertStatus = checkboxEl.checked ? "Đã trả" : "Chưa trả";
+      .withFailureHandler(function() {
+        showToast("Lỗi cập nhật tình trạng chi phí", true);
         targetRows.forEach(rNum => {
+          const prevVal = previousValues.get(rNum) || "Chưa thanh toán";
           const localJob = allJobs.find(item => Number(item.rowNumber) === Number(rNum));
-          if (localJob) localJob.ttChiPhi = revertStatus;
+          if (localJob) localJob.ttChiPhi = prevVal;
           const foundEntry = Object.entries(firebaseJobsMap || {}).find(([k, v]) => v && Number(v.rowNumber) === Number(rNum));
-          if (foundEntry && foundEntry[1]) foundEntry[1].ttChiPhi = revertStatus;
+          if (foundEntry && foundEntry[1]) foundEntry[1].ttChiPhi = prevVal;
         });
         renderMasterTable();
       })
@@ -5524,16 +5562,31 @@
       getDisplayNameForCode(a).localeCompare(getDisplayNameForCode(b), 'vi')
     );
     const select = document.getElementById('filterAuthCodeCalendar');
-    const selectedUser = applyDefaultOwnCode ? ownUser : (select ? select.value : ownUser);
     if (!select) return;
+
+    let selectedUser;
+    if (applyDefaultOwnCode) {
+      selectedUser = ownUser;
+    } else if (selectedAdminAuthFilter !== null) {
+      selectedUser = selectedAdminAuthFilter;
+    } else {
+      selectedUser = select.value !== undefined ? select.value : ownUser;
+    }
+
+    if (selectedUser && !sortedUsers.includes(selectedUser)) {
+      sortedUsers.push(selectedUser);
+    }
+
     let options = `<option value="">👤 Tất cả tài khoản (${sortedUsers.length})</option>`;
     sortedUsers.forEach(u => {
       const displayName = getDisplayNameForCode(u);
       options += `<option value="${u}" ${u === selectedUser ? 'selected' : ''}>${displayName}</option>`;
     });
     select.innerHTML = options;
-    if (applyDefaultOwnCode) select.value = ownUser;
+    select.value = selectedUser;
+    selectedAdminAuthFilter = selectedUser;
   }
+
   function populateOwnerCodeSelect(selectedUser) {
     const sel = document.getElementById('formMaDangNhap');
     if (!sel) return;
@@ -5552,6 +5605,8 @@
   }
 
   function onCalendarAuthFilterChange() {
+    const select = document.getElementById('filterAuthCodeCalendar');
+    selectedAdminAuthFilter = select ? select.value : '';
     renderCalendar();
     renderSelectedDayJobs();
     renderMasterTable(false);
@@ -5966,7 +6021,22 @@
           } else if (col.id === 'chiPhi') {
             html += `<td class="text-end text-nowrap cell-money-secondary">${cVal.toLocaleString('vi-VN')} đ</td>`;
           } else if (col.id === 'ttChiPhi') {
-            html += `<td class="text-center"><input type="checkbox" class="cost-checkbox" ${normalizeQrCostStatus(j.ttChiPhi) === 'Đã trả' ? 'checked' : ''} onchange="toggleCostStatus(${j.rowNumber}, this)" title="Tích chọn nếu đã thanh toán chi phí" autocomplete="off"></td>`;
+            const currentCostStatus = normalizeCostStatusLabel(j.ttChiPhi);
+            const costPillClass = currentCostStatus === 'Đã thanh toán' ? 'status-pill-paid' : 'status-pill-unpaid';
+            const costOptionsHtml = COST_STATUS_OPTIONS.map(opt =>
+              `<li><a class="dropdown-item ${currentCostStatus === opt ? 'active fw-bold' : ''}" href="javascript:void(0)" onclick="changeCostStatusValue(${j.rowNumber}, '${escapeJsQuotes(opt)}')">${opt}</a></li>`
+            ).join('');
+            html += `<td class="text-center">
+              <div class="dropdown d-inline-block">
+                <button class="dropdown-toggle status-pill ${costPillClass}" type="button" data-bs-toggle="dropdown" aria-expanded="false">
+                  <span class="status-dot"></span>
+                  <span>${currentCostStatus}</span>
+                </button>
+                <ul class="dropdown-menu shadow-sm py-1" style="font-size: 13px;">
+                  ${costOptionsHtml}
+                </ul>
+              </div>
+            </td>`;
           } else if (col.id === 'maDangNhap') {
             html += `<td class="text-center"><span class="badge bg-dark bg-opacity-10 text-dark border">${getDisplayNameForCode(j.maDangNhap)}</span></td>`;
           }
@@ -6088,10 +6158,18 @@
               </div>
 
               <div class="d-flex justify-content-between align-items-center mt-2 pt-2 border-top" style="font-size: 12px;">
-                <label class="d-flex align-items-center gap-2 text-secondary fw-semibold mb-0" style="cursor: pointer;">
-                  <input type="checkbox" class="cost-checkbox m-0" ${j.ttChiPhi === 'Đã trả' ? 'checked' : ''} onchange="toggleCostStatus(${j.rowNumber}, this)" autocomplete="off">
-                  <span>TT Chi phí (${j.ttChiPhi === 'Đã trả' ? 'Đã trả' : 'Chưa trả'})</span>
-                </label>
+                <div class="d-flex align-items-center gap-2">
+                  <span class="text-secondary fw-semibold">TT Chi phí:</span>
+                  <div class="dropdown d-inline-block">
+                    <button class="dropdown-toggle status-pill ${normalizeCostStatusLabel(j.ttChiPhi) === 'Đã thanh toán' ? 'status-pill-paid' : 'status-pill-unpaid'}" type="button" data-bs-toggle="dropdown" aria-expanded="false">
+                      <span class="status-dot"></span>
+                      <span>${normalizeCostStatusLabel(j.ttChiPhi)}</span>
+                    </button>
+                    <ul class="dropdown-menu shadow-sm py-1" style="font-size: 13px;">
+                      ${COST_STATUS_OPTIONS.map(opt => `<li><a class="dropdown-item ${normalizeCostStatusLabel(j.ttChiPhi) === opt ? 'active fw-bold' : ''}" href="javascript:void(0)" onclick="changeCostStatusValue(${j.rowNumber}, '${escapeJsQuotes(opt)}')">${opt}</a></li>`).join('')}
+                    </ul>
+                  </div>
+                </div>
                 ${isAdminAccount ? `<span class="badge bg-light text-secondary border">👤 ${getDisplayNameForCode(j.maDangNhap)}</span>` : ''}
               </div>
             </div>`;
@@ -6113,6 +6191,241 @@
     document.getElementById('repTotalUnpaid').innerText = sumChuaTT.toLocaleString('vi-VN') + ' đ';
   }
 
+  let extraJobEntrySeq = 0;
+
+  function getNextDayIso(isoStr) {
+    if (!isoStr || !/^\d{4}-\d{2}-\d{2}$/.test(isoStr)) return getLocalIsoDate(new Date());
+    const [y, m, d] = isoStr.split('-').map(Number);
+    const nextDate = new Date(y, m - 1, d + 1);
+    return getLocalIsoDate(nextDate);
+  }
+
+  function resetExtraJobEntries() {
+    extraJobEntrySeq = 0;
+    const container = document.getElementById('extraJobEntriesContainer');
+    if (container) {
+      container.innerHTML = '';
+      container.classList.add('d-none');
+    }
+    updateMultiJobModalState();
+  }
+
+  function updateMultiJobModalState() {
+    const container = document.getElementById('extraJobEntriesContainer');
+    const cards = container ? container.querySelectorAll('.extra-job-entry-card') : [];
+    const totalCount = 1 + cards.length;
+    const isEditing = Boolean(document.getElementById('formRowNumber')?.value);
+
+    const primaryLabel = document.getElementById('primaryJobSectionLabel');
+    const countBadge = document.getElementById('multiJobCountBadge');
+    const saveBtn = document.getElementById('btnSave');
+
+    cards.forEach((card, idx) => {
+      const titleEl = card.querySelector('.extra-job-card-title');
+      if (titleEl) titleEl.innerText = `Công việc #${idx + 2}`;
+    });
+
+    if (!isEditing && cards.length > 0) {
+      if (container) container.classList.remove('d-none');
+      if (primaryLabel) primaryLabel.innerText = 'Ngày thực hiện · Công việc #1';
+      if (countBadge) {
+        countBadge.innerText = `${totalCount} công việc`;
+        countBadge.classList.remove('d-none');
+      }
+      if (saveBtn && !saveBtn.disabled) {
+        saveBtn.innerText = `Lưu (${totalCount} công việc)`;
+      }
+    } else {
+      if (container) container.classList.add('d-none');
+      if (primaryLabel) primaryLabel.innerText = 'Ngày thực hiện';
+      if (countBadge) countBadge.classList.add('d-none');
+      if (saveBtn && !saveBtn.disabled) {
+        saveBtn.innerText = 'Lưu';
+      }
+    }
+  }
+
+  function addExtraJobEntry() {
+    const container = document.getElementById('extraJobEntriesContainer');
+    if (!container) return;
+
+    extraJobEntrySeq += 1;
+    const entryId = extraJobEntrySeq;
+    const existingCards = container.querySelectorAll('.extra-job-entry-card');
+    const entryNumber = existingCards.length + 2;
+
+    const lastDateInput = existingCards.length > 0
+      ? existingCards[existingCards.length - 1].querySelector('.extra-job-ngay')
+      : document.getElementById('formNgay');
+    const defaultNextDate = getNextDayIso(lastDateInput ? lastDateInput.value : '');
+
+    const defaultJobType = capitalizeFirstLetter(document.getElementById('formCongViec')?.value || '');
+    const defaultCustomer = capitalizeAllWords(document.getElementById('formKhachHang')?.value || '');
+    const defaultExecutor = capitalizeAllWords(document.getElementById('formNguoiThucHien')?.value || '');
+
+    const statusOptionsHtml = FIXED_EDIT_STATUSES.map(s =>
+      `<option value="${s}" ${s === 'Chờ' ? 'selected' : ''}>${s}</option>`
+    ).join('');
+
+    const cardHtml = `
+      <div class="extra-job-entry-card mb-2.5" id="extraJobCard_${entryId}" style="background: #f8fafc; border: 1px solid #e2e8f0; border-left: 3.5px solid #7b1113; border-radius: 14px; padding: 12px 14px;">
+        <div class="d-flex align-items-center justify-content-between mb-2">
+          <span class="extra-job-card-title fw-bold" style="font-size: 12.5px; color: #7b1113;">Công việc #${entryNumber}</span>
+          <button type="button" class="btn btn-sm btn-outline-danger py-0 px-2" style="font-size: 11px; border-radius: 7px;" onclick="removeExtraJobEntry(${entryId})" title="Xóa công việc này">✕ Xóa</button>
+        </div>
+
+        <div class="row g-2 mb-2">
+          <div class="col-12">
+            <label class="form-label">Ngày thực hiện</label>
+            <input type="date" class="form-control fw-semibold extra-job-ngay" value="${defaultNextDate}" style="width: 168px; max-width: 100%;" required autocomplete="off">
+          </div>
+        </div>
+
+        <div class="row g-2 mb-2">
+          <div class="col-6">
+            <label class="form-label">Công việc</label>
+            <input type="text" class="form-control extra-job-congviec" list="listCongViec" value="${escapeHtmlAttr(defaultJobType)}" placeholder="Nhập hoặc chọn..." autocomplete="off" oninput="if(this.value.length===1) this.value=capitalizeFirstLetter(this.value)" onblur="this.value=capitalizeFirstLetter(this.value)">
+          </div>
+          <div class="col-6">
+            <label class="form-label">Tình trạng</label>
+            <select class="form-select extra-job-tinhtrang">${statusOptionsHtml}</select>
+          </div>
+        </div>
+
+        <div class="row g-2 mb-2">
+          <div class="col-6">
+            <label class="form-label">Khách hàng</label>
+            <input type="text" class="form-control extra-job-khachhang" list="listKhachHang" value="${escapeHtmlAttr(defaultCustomer)}" placeholder="Nhập hoặc chọn..." autocomplete="off" oninput="this.value=this.value.replace(/(^|\s+)(\S)/g, (m, s, c) => s + c.toLocaleUpperCase('vi-VN'))" onblur="this.value=capitalizeAllWords(this.value)">
+          </div>
+          <div class="col-6">
+            <label class="form-label">Người thực hiện</label>
+            <input type="text" class="form-control extra-job-nguoithuchien" list="listNguoiThucHien" value="${escapeHtmlAttr(defaultExecutor)}" placeholder="Nhập hoặc chọn..." autocomplete="off" oninput="this.value=this.value.replace(/(^|\s+)(\S)/g, (m, s, c) => s + c.toLocaleUpperCase('vi-VN'))" onblur="this.value=capitalizeAllWords(this.value)">
+          </div>
+        </div>
+
+        <div class="row g-2 mb-2">
+          <div class="col-4">
+            <label class="form-label">Thời gian</label>
+            <input type="text" class="form-control extra-job-thoigian" autocomplete="off">
+          </div>
+          <div class="col-8">
+            <label class="form-label">Địa chỉ</label>
+            <div class="input-group">
+              <input type="text" class="form-control extra-job-diachi" autocomplete="off">
+              <button class="btn btn-outline-secondary" type="button" onclick="generateMapLinkForExtraEntry(${entryId}, this)" title="Tạo link Google Maps từ địa chỉ">Tạo map</button>
+            </div>
+          </div>
+        </div>
+
+        <div class="mb-2">
+          <label class="form-label text-success">Link Google Maps</label>
+          <div class="input-group">
+            <input type="text" class="form-control extra-job-maplink" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false">
+            <button class="btn btn-outline-success" type="button" onclick="fetchAddressFromMapForExtraEntry(${entryId}, this)" title="Trích xuất địa chỉ tự động vào ô Địa chỉ">Lấy địa chỉ</button>
+          </div>
+        </div>
+
+        <div class="mb-2">
+          <label class="form-label">Ghi chú công việc</label>
+          <textarea class="form-control extra-job-ghichu" rows="1" placeholder="Ghi chú thêm (nếu có)..." autocomplete="off"></textarea>
+        </div>
+
+        <div class="row g-2">
+          <div class="col-4">
+            <label class="form-label">Giá trị</label>
+            <input type="text" inputmode="numeric" class="form-control fw-semibold text-primary extra-job-giatri" id="extraGiaTri_${entryId}" oninput="handleMoneyInput(this, 'extraChipsGiaTri_${entryId}')" onblur="formatMoneyBlur(this)" autocomplete="off">
+            <div id="extraChipsGiaTri_${entryId}" class="money-quick-chips"></div>
+          </div>
+          <div class="col-4">
+            <label class="form-label">Đã cọc</label>
+            <input type="text" inputmode="numeric" class="form-control extra-job-dacoc" id="extraDaCoc_${entryId}" oninput="handleMoneyInput(this, 'extraChipsDaCoc_${entryId}')" onblur="formatMoneyBlur(this)" autocomplete="off">
+            <div id="extraChipsDaCoc_${entryId}" class="money-quick-chips"></div>
+          </div>
+          <div class="col-4">
+            <label class="form-label">Chi phí</label>
+            <input type="text" inputmode="numeric" class="form-control extra-job-chiphi" id="extraChiPhi_${entryId}" oninput="handleMoneyInput(this, 'extraChipsChiPhi_${entryId}')" onblur="formatMoneyBlur(this)" autocomplete="off">
+            <div id="extraChipsChiPhi_${entryId}" class="money-quick-chips"></div>
+          </div>
+        </div>
+      </div>
+    `;
+
+    container.insertAdjacentHTML('beforeend', cardHtml);
+    updateMultiJobModalState();
+    const addedCard = document.getElementById(`extraJobCard_${entryId}`);
+    if (addedCard) {
+      addedCard.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+    }
+  }
+
+  function removeExtraJobEntry(entryId) {
+    const card = document.getElementById(`extraJobCard_${entryId}`);
+    if (card) card.remove();
+    updateMultiJobModalState();
+  }
+
+  async function generateMapLinkForExtraEntry(entryId, btnEl) {
+    const card = document.getElementById(`extraJobCard_${entryId}`);
+    if (!card) return;
+    const diaChiInput = card.querySelector('.extra-job-diachi');
+    const mapLinkInput = card.querySelector('.extra-job-maplink');
+    const queryText = (diaChiInput?.value || '').trim();
+    if (!queryText) {
+      showToast('Hãy nhập ô Địa chỉ trước', true);
+      return;
+    }
+    const rawMapUrl = 'https://www.google.com/maps/search/?api=1&query=' + encodeURIComponent(queryText);
+    const oldHtml = btnEl ? btnEl.innerHTML : 'Tạo map';
+    if (btnEl) {
+      btnEl.innerHTML = 'Đang tạo...';
+      btnEl.disabled = true;
+    }
+    try {
+      const shortUrl = await shortenUrlWithIsGd(rawMapUrl);
+      mapLinkInput.value = shortUrl;
+      showToast('Đã tạo link Google Maps rút gọn');
+    } catch (err) {
+      mapLinkInput.value = rawMapUrl;
+      showToast('Đã tạo link Google Maps');
+    } finally {
+      if (btnEl) {
+        btnEl.innerHTML = oldHtml;
+        btnEl.disabled = false;
+      }
+    }
+  }
+
+  async function fetchAddressFromMapForExtraEntry(entryId, btnEl) {
+    const card = document.getElementById(`extraJobCard_${entryId}`);
+    if (!card) return;
+    const mapLinkInput = card.querySelector('.extra-job-maplink');
+    const diaChiInput = card.querySelector('.extra-job-diachi');
+    const url = (mapLinkInput?.value || '').trim();
+    if (!url) {
+      showToast('Chưa dán link Google Maps', true);
+      return;
+    }
+    const oldHtml = btnEl ? btnEl.innerHTML : 'Lấy địa chỉ';
+    if (btnEl) {
+      btnEl.innerHTML = 'Đang đọc...';
+      btnEl.disabled = true;
+    }
+    try {
+      const fallbackRes = await resolveMapAddressClientSide(url);
+      if (fallbackRes.success && fallbackRes.address) {
+        diaChiInput.value = fallbackRes.address;
+        showToast('Đã điền địa chỉ từ Map');
+      } else {
+        showToast(fallbackRes.message || 'Không lấy được địa chỉ', true);
+      }
+    } finally {
+      if (btnEl) {
+        btnEl.innerHTML = oldHtml;
+        btnEl.disabled = false;
+      }
+    }
+  }
+
   function openAddModal() {
     openAddModalForDate(selectedDateIso);
   }
@@ -6121,10 +6434,8 @@
     document.getElementById('jobForm').reset();
     document.getElementById('formRowNumber').value = '';
     document.getElementById('formChiTiet').value = '';
-    const isTabLichActive = !document.getElementById('tabLich').classList.contains('d-none');
-    const activeAuthFilter = isTabLichActive
-      ? (document.getElementById('filterAuthCodeCalendar')?.value || '')
-      : (document.getElementById('filterAuthCodeCalendar')?.value || '');
+    resetExtraJobEntries();
+    const activeAuthFilter = document.getElementById('filterAuthCodeCalendar')?.value || '';
     populateOwnerCodeSelect(activeAuthFilter || currentUsername);
     document.getElementById('formThoiGian').value = '';
     document.getElementById('formDiaChi').value = '';
@@ -6134,9 +6445,12 @@
     document.getElementById('chipsDaCoc').innerHTML = '';
     document.getElementById('chipsChiPhi').innerHTML = '';
     document.getElementById('modalTitle').innerText = 'Thêm công việc mới';
+    const addExtraBtn = document.getElementById('btnAddExtraJobEntry');
+    if (addExtraBtn) addExtraBtn.classList.remove('d-none');
     const delBtn = document.getElementById('btnDeleteInModal');
     if (delBtn) delBtn.classList.add('d-none');
     populateModalDropdowns("", "", "", "Chờ");
+    if (window.lucide) lucide.createIcons();
     jobModalInstance.show();
   }
 
@@ -6146,6 +6460,10 @@
     const parsedDetail = splitJobDetail(j.chiTiet);
 
     document.getElementById('formRowNumber').value = j.rowNumber;
+    resetExtraJobEntries();
+    const addExtraBtn = document.getElementById('btnAddExtraJobEntry');
+    if (addExtraBtn) addExtraBtn.classList.add('d-none');
+
     document.getElementById('formNgay').value = toInputDate(j.ngay);
     populateOwnerCodeSelect(j.maDangNhap || currentUsername);
     document.getElementById('formChiTiet').value = j.chiTiet || '';
@@ -6183,31 +6501,116 @@
     }
     document.getElementById('formChiTiet').value = combinedDetail;
 
-    const btn = document.getElementById('btnSave');
-    btn.disabled = true; btn.innerText = 'Đang lưu...';
-
     const formData = Object.fromEntries(new FormData(formEl).entries());
-    const cleanJob = capitalizeFirstLetter(formData.congViec || '');
-    const cleanCust = capitalizeAllWords(formData.khachHang || '');
-    const cleanExec = capitalizeAllWords(formData.nguoiThucHien || '');
-    formData.congViec = cleanJob;
-    formData.khachHang = cleanCust;
-    formData.nguoiThucHien = cleanExec;
-    google.script.run
-      .withSuccessHandler(function(res) {
-        allJobs = res.jobs || [];
-        renderCalendar();
-        renderSelectedDayJobs();
-        renderMasterTable();
-        btn.disabled = false; btn.innerText = 'Lưu';
-        jobModalInstance.hide();
-        showToast('Đã lưu lịch thành công');
-      })
-      .withFailureHandler(function(err) {
-        showToast('Lỗi khi lưu: ' + err.message, true);
-        btn.disabled = false; btn.innerText = 'Lưu';
-      })
-      .saveJobData(formData);
+    formData.congViec = capitalizeFirstLetter(formData.congViec || '');
+    formData.khachHang = capitalizeAllWords(formData.khachHang || '');
+    formData.nguoiThucHien = capitalizeAllWords(formData.nguoiThucHien || '');
+
+    const extraCards = Array.from(document.querySelectorAll('#extraJobEntriesContainer .extra-job-entry-card'));
+    const allJobsPayload = [formData];
+
+    if (!formData.rowNumber && extraCards.length > 0) {
+      for (let i = 0; i < extraCards.length; i++) {
+        const card = extraCards[i];
+        const idxLabel = i + 2;
+        const ngayInp = card.querySelector('.extra-job-ngay');
+        const congViecInp = card.querySelector('.extra-job-congviec');
+        const tinhTrangSel = card.querySelector('.extra-job-tinhtrang');
+        const khachHangInp = card.querySelector('.extra-job-khachhang');
+        const nguoiThucHienInp = card.querySelector('.extra-job-nguoithuchien');
+        const thoiGianInp = card.querySelector('.extra-job-thoigian');
+        const diaChiInp = card.querySelector('.extra-job-diachi');
+        const mapLinkInp = card.querySelector('.extra-job-maplink');
+        const ghiChuInp = card.querySelector('.extra-job-ghichu');
+        const giaTriInp = card.querySelector('.extra-job-giatri');
+        const daCocInp = card.querySelector('.extra-job-dacoc');
+        const chiPhiInp = card.querySelector('.extra-job-chiphi');
+
+        const ngayVal = (ngayInp?.value || '').trim();
+        const cvVal = capitalizeFirstLetter(congViecInp?.value || '');
+        const khVal = capitalizeAllWords(khachHangInp?.value || '');
+        const nthVal = capitalizeAllWords(nguoiThucHienInp?.value || '');
+
+        if (!ngayVal) {
+          showToast(`Vui lòng chọn Ngày thực hiện cho Công việc #${idxLabel}`, true);
+          if (ngayInp) ngayInp.focus();
+          return;
+        }
+        if (!cvVal) {
+          showToast(`Vui lòng nhập Công việc cho Công việc #${idxLabel}`, true);
+          if (congViecInp) congViecInp.focus();
+          return;
+        }
+        if (!khVal) {
+          showToast(`Vui lòng nhập Khách hàng cho Công việc #${idxLabel}`, true);
+          if (khachHangInp) khachHangInp.focus();
+          return;
+        }
+        if (!nthVal) {
+          showToast(`Vui lòng nhập Người thực hiện cho Công việc #${idxLabel}`, true);
+          if (nguoiThucHienInp) nguoiThucHienInp.focus();
+          return;
+        }
+
+        const extraNote = (ghiChuInp?.value || '').trim();
+        let extraDetail = combineJobDetail(thoiGianInp?.value || '', diaChiInp?.value || '');
+        if (extraNote) {
+          extraDetail += ` [NOTE:${extraNote.replace(/\]/g, ')')}]`;
+        }
+
+        allJobsPayload.push({
+          rowNumber: '',
+          maDangNhap: formData.maDangNhap,
+          ngay: ngayVal,
+          congViec: cvVal,
+          tinhTrang: (tinhTrangSel?.value || 'Chờ').trim(),
+          khachHang: khVal,
+          nguoiThucHien: nthVal,
+          chiTiet: extraDetail,
+          mapLink: (mapLinkInp?.value || '').trim(),
+          ghiChu: extraNote,
+          giaTri: giaTriInp?.value || '',
+          daCoc: daCocInp?.value || '',
+          chiPhi: chiPhiInp?.value || ''
+        });
+      }
+    }
+
+    const btn = document.getElementById('btnSave');
+    btn.disabled = true;
+    btn.innerText = 'Đang lưu...';
+
+    const onSaveSuccess = function(res) {
+      allJobs = res.jobs || [];
+      renderCalendar();
+      renderSelectedDayJobs();
+      renderMasterTable();
+      resetExtraJobEntries();
+      btn.disabled = false;
+      btn.innerText = 'Lưu';
+      jobModalInstance.hide();
+      showToast(allJobsPayload.length > 1
+        ? `Đã lưu ${allJobsPayload.length} công việc thành công`
+        : 'Đã lưu lịch thành công');
+    };
+
+    const onSaveError = function(err) {
+      showToast('Lỗi khi lưu: ' + err.message, true);
+      btn.disabled = false;
+      updateMultiJobModalState();
+    };
+
+    if (allJobsPayload.length > 1) {
+      google.script.run
+        .withSuccessHandler(onSaveSuccess)
+        .withFailureHandler(onSaveError)
+        .saveMultipleJobsData(allJobsPayload);
+    } else {
+      google.script.run
+        .withSuccessHandler(onSaveSuccess)
+        .withFailureHandler(onSaveError)
+        .saveJobData(formData);
+    }
   }
 
   function confirmDeleteFromModal() {
@@ -7297,6 +7700,7 @@
     currentDisplayName = "";
     isAdminAccount = false;
     adminDefaultFilterInitialized = false;
+    selectedAdminAuthFilter = null;
     allJobs = [];
     firebaseJobsMap = {};
     authorizedCodesMap = {};
@@ -7412,7 +7816,7 @@
               firebaseJobsMap[key][parts[1]] = parsed.data;
               if (parts[1] === 'ttChiPhi') {
                 const localJob = allJobs.find(item => String(item.firebaseKey || '') === String(key));
-                if (localJob) localJob.ttChiPhi = String(parsed.data || 'Chưa trả');
+                if (localJob) localJob.ttChiPhi = normalizeCostStatusLabel(parsed.data);
                 renderMasterTable();
                 return;
               }
