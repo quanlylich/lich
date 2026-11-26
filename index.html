@@ -190,15 +190,7 @@
     .empty-day-row td { color: #94a3b8; font-style: italic; background-color: #fcfcfd; }
     .today-row.empty-day-row td { color: #664d03; background-color: #fff3cd !important; }
 
-    .row-status-xong td {
-      background-color: #f0fdf4 !important;
-      color: #166534 !important;
-    }
-    .row-status-xong td .job-badge {
-      background-color: #dcfce7 !important;
-      border-color: #86efac !important;
-      color: #166534 !important;
-    }
+
 
     .search-filter-box {
       position: relative;
@@ -1401,23 +1393,57 @@
       border-radius: 999px;
     }
 
-    #masterTableContainer table {
-      min-width: 1060px !important;
-      width: 100% !important;
+    @media (min-width: 768px) {
+      .main-content {
+        max-width: none !important;
+        width: calc(100% - var(--sidebar-width)) !important;
+      }
+      .main-content.sidebar-expanded {
+        width: 100% !important;
+      }
+      #masterTableContainer table {
+        min-width: 0 !important;
+        width: 100% !important;
+        table-layout: auto;
+      }
+      #masterTableContainer table th,
+      #masterTableContainer table td {
+        white-space: normal !important;
+        word-break: break-word;
+        font-size: clamp(10.5px, 0.78vw, 12.5px) !important;
+        padding: clamp(7px, 0.65vw, 10px) clamp(4px, 0.42vw, 8px) !important;
+      }
+      #masterTableContainer table th .btn,
+      #masterTableContainer table td .job-badge,
+      #masterTableContainer table td .customer-badge,
+      #masterTableContainer table td .status-pill {
+        font-size: clamp(10px, 0.72vw, 11.5px) !important;
+        padding: clamp(2px, 0.25vw, 4px) clamp(5px, 0.5vw, 9px) !important;
+      }
+      #masterTableContainer table td.col-address-cell {
+        min-width: 120px !important;
+        max-width: 280px !important;
+        text-align: left !important;
+        line-height: 1.38;
+      }
     }
 
-    #masterTableContainer table th,
-    #masterTableContainer table td {
-      white-space: nowrap !important;
-    }
-
-    /* Cột Địa chỉ cho phép xuống dòng gọn gàng với độ rộng tối thiểu rõ ràng */
-    #masterTableContainer table td.col-address-cell {
-      white-space: normal !important;
-      min-width: 210px !important;
-      max-width: 290px !important;
-      text-align: left !important;
-      line-height: 1.4;
+    @media (max-width: 767.98px) {
+      #masterTableContainer table {
+        min-width: 1020px !important;
+        width: 100% !important;
+      }
+      #masterTableContainer table th,
+      #masterTableContainer table td {
+        white-space: nowrap !important;
+      }
+      #masterTableContainer table td.col-address-cell {
+        white-space: normal !important;
+        min-width: 210px !important;
+        max-width: 290px !important;
+        text-align: left !important;
+        line-height: 1.4;
+      }
     }
 
     /* Ghim nhẹ cột Ngày trên mobile khi vuốt ngang để không bị mất dấu dòng */
@@ -1460,11 +1486,7 @@
       margin-bottom: 12px;
       box-shadow: 0 2px 8px rgba(15, 23, 42, 0.04);
     }
-    .mobile-job-card.card-status-xong {
-      background: #f0fdf4;
-      border-color: #bbf7d0;
-      border-left-color: #16a34a;
-    }
+
     .mobile-job-card.card-today {
       background: #fffbeb;
       border-color: #fde68a;
@@ -1627,36 +1649,7 @@
 
     /* === NÂNG CẤP V9: TÔ MÀU DÒNG CHƯA TT, NGÀY LỊCH XONG MÀU XANH & ĐỒNG BỘ TOÀN BỘ POPUP === */
 
-    /* 1. Tô màu dòng có tình trạng "Chưa TT" tại trang Quản lý công việc */
-    .row-status-chuatt td {
-      background-color: #fff1f2 !important;
-      color: #881337 !important;
-    }
-    .row-status-chuatt td:first-child {
-      border-left: 4px solid #e11d48 !important;
-    }
-    .row-status-chuatt:hover td {
-      background-color: #ffe4e6 !important;
-    }
-    .row-status-chuatt td .job-badge {
-      background-color: #ffe4e6 !important;
-      border-color: #fda4af !important;
-      color: #9f1239 !important;
-    }
 
-    .row-status-xong td:first-child {
-      border-left: 4px solid #16a34a !important;
-    }
-    .row-status-xong:hover td {
-      background-color: #dcfce7 !important;
-    }
-
-    /* Thẻ mobile khi ở trạng thái Chưa TT */
-    .mobile-job-card.card-status-chuatt {
-      background: #fff1f2;
-      border-color: #fecdd3;
-      border-left: 4px solid #e11d48;
-    }
 
     /* 2. Tại Lịch làm việc: Ngày có toàn bộ công việc đạt trạng thái "Xong" hiển thị màu xanh lá */
     .calendar-day.all-done {
@@ -1841,7 +1834,7 @@
     .calendar-summary-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:14px;margin-bottom:20px}.summary-card{display:flex;align-items:center;gap:14px;min-width:0;min-height:104px;padding:17px 19px;background:var(--surface);border:1px solid var(--line);border-radius:17px;box-shadow:var(--shadow-card);transition:transform .2s ease,box-shadow .2s ease}.summary-card:hover{transform:translateY(-2px);box-shadow:0 12px 30px rgba(34,31,32,.07)}.summary-icon{display:grid;place-items:center;width:43px;height:43px;flex:0 0 auto;border-radius:14px}.summary-icon svg{width:20px;height:20px;stroke-width:1.9}.summary-icon-wine{color:#7b1113;background:#fff0ef}.summary-icon-green{color:#4c7b5b;background:#edf5ee}.summary-icon-amber{color:#a26b27;background:#fbf3e6}.summary-card span,.summary-card strong,.summary-card small{display:block}.summary-card span{font-size:11px;color:#777680;font-weight:650}.summary-card strong{margin:2px 0 1px;color:#28262c;font-size:24px;line-height:1.15;font-weight:800;letter-spacing:-.04em;font-variant-numeric:tabular-nums}.summary-card small{color:#a09fa6;font-size:9.5px}
     .calendar-card,.day-detail-panel,.main-content .card{background:#fff;border:1px solid var(--line)!important;border-radius:18px!important;box-shadow:var(--shadow-card)!important}.calendar-card{padding:20px}.calendar-header{margin-bottom:18px}#calendarMonthTitle{color:#28262c;font-size:16px;letter-spacing:-.02em;font-weight:750}.calendar-header .btn-group{gap:6px}.calendar-nav-button,.calendar-today-button{display:inline-flex;align-items:center;justify-content:center;gap:6px;border-radius:10px!important;border:1px solid #e8e7eb!important;color:#55545d!important;background:#fff!important;min-height:35px;box-shadow:none!important}.calendar-nav-button{width:36px;padding:0!important}.calendar-nav-button svg,.calendar-today-button svg{width:15px;height:15px}.calendar-today-button{padding:0 9px!important;min-height:33px;font-weight:650!important}.calendar-nav-button:hover,.calendar-today-button:hover{color:#7b1113!important;background:#fff7f6!important;border-color:#ecd1d0!important}.calendar-grid{gap:6px}.calendar-weekday{padding:0 0 7px;color:#a09fa7;font-size:10px;font-weight:750;letter-spacing:.04em}.calendar-day{height:74px;min-height:74px;max-height:74px;padding:5px 2px;border-color:#f0eff2;border-radius:12px;gap:2px}.calendar-day:hover{border-color:#d9c6c6;background:#fffafa}.calendar-day.today{border:2px solid #7b1113}.calendar-day.has-event{background:#fff8f7;border-color:#f4d7d5}.day-number{width:25px;height:25px;min-height:25px;color:#4b4a52;font-size:12px;font-weight:700}.calendar-day.today .day-number{background:#7b1113;color:#fff}.lunar-date{color:#aaa9b0;font-size:9px}.event-badge{max-width:90%;overflow:hidden;text-overflow:ellipsis;border-radius:999px;background:#8b282b;font-size:8px;font-weight:700;padding:2px 6px}.calendar-day.selected-date{background:#7b1113!important;box-shadow:0 6px 14px rgba(123,17,19,.18)}.calendar-day.selected-date .day-number{background:#fff;color:#7b1113}
     .day-detail-panel{padding:20px}#selectedDateHeader{color:#2b2931!important;font-size:15px;font-weight:760!important}#selectedDateSubCount{display:inline-block;margin-top:5px;color:#9998a0!important;font-size:10px}.calendar-add-button{display:inline-flex;align-items:center;gap:7px;min-height:36px;border:0!important;border-radius:10px!important;background:#7b1113!important;box-shadow:0 5px 12px rgba(123,17,19,.16)!important}.calendar-add-button svg{width:15px;height:15px}#filterCustomerInput{min-height:39px;margin:5px 0 13px!important;border-radius:11px;border-color:#e8e7eb;background:#fbfbfc;font-size:11px}.event-item-card{margin-top:9px;padding:13px;border:1px solid #efedf0;border-radius:14px;background:#fff}.event-item-card:hover{border-color:#ded9dc;box-shadow:0 7px 18px rgba(30,26,29,.06)}
-    #tabChitiet .card{padding:18px!important}#tabChitiet .top-header-bar{margin-bottom:18px!important}.search-filter-box{width:min(190px,100%);height:38px;padding:0 10px;border-color:#e7e6eb;border-radius:11px;box-shadow:none!important;background:#fbfbfc}.search-filter-box:focus-within{border-color:#b87576;box-shadow:0 0 0 3px rgba(123,17,19,.08)!important}.search-filter-icon{color:#a2a0a8;margin-right:8px}.search-filter-icon svg{width:16px;height:16px}.search-filter-input{font-size:11px}.btn-toolbar-modern,.column-visibility-dropdown{border-radius:10px!important}.btn-toolbar-modern{display:inline-flex;align-items:center;gap:7px;min-height:36px;padding:0 11px!important;border:1px solid #e8e7eb!important;color:#5d5c65!important;background:#fff!important;font-weight:650!important;font-size:11px!important;box-shadow:none!important}.btn-toolbar-modern:hover{color:#7b1113!important;border-color:#e5cecd!important;background:#fff8f7!important}.btn-toolbar-modern svg{width:15px;height:15px}.btn-refresh-table{min-width:93px;justify-content:center}#filterMonthTable,#filterAuthCodeCalendar{min-height:37px!important;border-radius:10px!important;border-color:#e8e7eb;font-size:11px}#tableStatusHint{color:#7d7c85!important}.mobile-scroll-hint{border:1px solid #f0e3e2;border-radius:12px;background:#fff8f7;color:#78696a;padding:9px 12px;font-size:10px}#btnToggleMobileCards{min-height:32px;border-radius:9px!important;background:#7b1113!important;font-size:10px!important}#masterTableContainer{border:1px solid #ecebf0;border-radius:13px;background:#fff}#masterTableContainer table{margin:0;font-size:11px!important}#masterTableContainer th{position:sticky;top:0;z-index:1;padding:11px 9px;color:#777680;background:#f8f7f8;border-bottom:1px solid #e9e8ec;font-size:10px;font-weight:750;white-space:nowrap}#masterTableContainer td{padding:10px 9px;border-color:#f0eff2;color:#4a4951;vertical-align:middle}#masterTableContainer tbody tr:hover td{background:#fffafa}#masterTableContainer .job-badge{border-radius:999px;font-weight:700}.today-row td{background:#fff9e9!important}.today-row td:first-child{border-left-color:#d89c37!important}.row-status-chuatt td{background:#fff5f4!important;color:#7e2628!important}.row-status-xong td{background:#f5faf5!important;color:#3e6245!important}.mobile-job-card{border:1px solid #e9e7eb!important;border-radius:15px!important;box-shadow:0 4px 14px rgba(34,31,32,.04)}
+    #tabChitiet .card{padding:18px!important}#tabChitiet .top-header-bar{margin-bottom:18px!important}.search-filter-box{width:min(190px,100%);height:38px;padding:0 10px;border-color:#e7e6eb;border-radius:11px;box-shadow:none!important;background:#fbfbfc}.search-filter-box:focus-within{border-color:#b87576;box-shadow:0 0 0 3px rgba(123,17,19,.08)!important}.search-filter-icon{color:#a2a0a8;margin-right:8px}.search-filter-icon svg{width:16px;height:16px}.search-filter-input{font-size:11px}.btn-toolbar-modern,.column-visibility-dropdown{border-radius:10px!important}.btn-toolbar-modern{display:inline-flex;align-items:center;gap:7px;min-height:36px;padding:0 11px!important;border:1px solid #e8e7eb!important;color:#5d5c65!important;background:#fff!important;font-weight:650!important;font-size:11px!important;box-shadow:none!important}.btn-toolbar-modern:hover{color:#7b1113!important;border-color:#e5cecd!important;background:#fff8f7!important}.btn-toolbar-modern svg{width:15px;height:15px}.btn-refresh-table{min-width:93px;justify-content:center}#filterMonthTable,#filterAuthCodeCalendar{min-height:37px!important;border-radius:10px!important;border-color:#e8e7eb;font-size:11px}#tableStatusHint{color:#7d7c85!important}.mobile-scroll-hint{border:1px solid #f0e3e2;border-radius:12px;background:#fff8f7;color:#78696a;padding:9px 12px;font-size:10px}#btnToggleMobileCards{min-height:32px;border-radius:9px!important;background:#7b1113!important;font-size:10px!important}#masterTableContainer{border:1px solid #ecebf0;border-radius:13px;background:#fff}#masterTableContainer table{margin:0;font-size:11px!important}#masterTableContainer th{position:sticky;top:0;z-index:1;padding:11px 9px;color:#777680;background:#f8f7f8;border-bottom:1px solid #e9e8ec;font-size:10px;font-weight:750;white-space:nowrap}#masterTableContainer td{padding:10px 9px;border-color:#f0eff2;color:#4a4951;vertical-align:middle}#masterTableContainer tbody tr:hover td{background:#fffafa}#masterTableContainer .job-badge{border-radius:999px;font-weight:700}.today-row td{background:#fff9e9!important}.today-row td:first-child{border-left:4px solid #d89c37!important}.mobile-job-card{border:1px solid #e9e7eb!important;border-radius:15px!important;box-shadow:0 4px 14px rgba(34,31,32,.04)}
     .form-control,.form-select{min-height:39px;border-color:#e6e5ea;border-radius:10px;color:#37363e;font-size:12px;box-shadow:none}.form-control:focus,.form-select:focus{border-color:#c78989;box-shadow:0 0 0 3px rgba(123,17,19,.08)}.form-label{color:#595861!important;font-weight:700!important;font-size:11px!important}.btn{border-radius:10px;font-weight:650;transition:all .17s ease}.btn-sm{font-size:11px}.btn-brand-primary,.btn-primary{background:#7b1113!important;border-color:#7b1113!important}.btn-brand-primary:hover,.btn-primary:hover{background:#971c20!important;border-color:#971c20!important}.app-toast{border-radius:14px;padding:11px 17px;font-size:12px}
     .fixed-menu-wrapper{top:max(25px,env(safe-area-inset-top));right:clamp(20px,3vw,46px)}.hamburger-menu-btn{width:40px;height:40px;border-radius:12px;border-color:#e6e4e8;box-shadow:0 5px 16px rgba(30,25,26,.07)}.fixed-dropdown-menu{border-color:#ebe9ed;border-radius:16px;box-shadow:0 20px 48px rgba(27,22,24,.15)}
     .login-overlay{background:radial-gradient(circle at 20% 18%,rgba(255,255,255,.12),transparent 30%),linear-gradient(135deg,#351113,#6f171a 55%,#3b1215);backdrop-filter:blur(6px)}.login-card{width:min(420px,calc(100vw - 30px));padding:30px;border:1px solid rgba(255,255,255,.55);border-radius:22px;box-shadow:0 24px 80px rgba(30,8,9,.28)}.login-logo{display:grid;place-items:center;width:55px;height:55px;margin:0 auto 16px;border-radius:18px;background:linear-gradient(145deg,#92282b,#6d1115);color:#fff;font-size:20px;font-weight:850;box-shadow:0 8px 20px rgba(123,17,19,.24)}#loginCardTitle{font-size:20px;letter-spacing:-.03em}#loginCardSubtitle{color:#86858d!important;font-size:11px!important}.login-card .form-control{min-height:43px;background:#fcfbfc}.login-card .btn{min-height:43px;border-radius:11px!important;background:#7b1113!important}
@@ -2520,15 +2513,39 @@
 
         <div class="d-flex justify-content-between align-items-center mb-1.5">
           <label class="form-label small fw-bold text-secondary mb-0">4. Nội dung bảng kê</label>
-          <button type="button" id="btnToggleQrMoney" class="btn btn-sm btn-toolbar-modern py-1 px-2.5" onclick="toggleQrShowMoney()">
-            Hiện giá trị
-          </button>
+          <div class="dropdown">
+            <button class="btn btn-sm dropdown-toggle btn-toolbar-modern py-1 px-2.5" type="button" id="btnQrDisplayFilter" data-bs-toggle="dropdown" data-bs-auto-close="outside" aria-expanded="false" style="height: 31px !important; font-size: 12px !important;">
+              <i data-lucide="sliders-horizontal"></i>
+              <span>Lọc hiển thị</span>
+              <span id="qrDisplayFilterBadge" class="badge rounded-pill d-none ms-1" style="background-color: #7b1113; font-size: 10px; padding: 2px 6px;">0</span>
+            </button>
+            <div class="dropdown-menu dropdown-menu-end column-visibility-dropdown shadow" style="min-width: 225px !important;">
+              <div class="px-2 py-1 mb-1 border-bottom" style="font-size: 11.5px;">
+                <span class="fw-bold text-uppercase text-muted" style="letter-spacing: 0.5px;">Tùy chọn hiển thị</span>
+              </div>
+              <label class="col-vis-item justify-content-between mb-0" for="qrToggleShowMoney">
+                <span>Ẩn/hiện giá trị</span>
+                <div class="form-check form-switch mb-0 p-0 d-flex align-items-center">
+                  <input class="form-check-input m-0" type="checkbox" id="qrToggleShowMoney" checked onchange="onQrDisplayFilterChange()" style="cursor: pointer;" autocomplete="off">
+                </div>
+              </label>
+              <label class="col-vis-item justify-content-between mb-0" for="qrToggleShowDetails">
+                <span>Ẩn/hiện thông tin chi tiết</span>
+                <div class="form-check form-switch mb-0 p-0 d-flex align-items-center">
+                  <input class="form-check-input m-0" type="checkbox" id="qrToggleShowDetails" checked onchange="onQrDisplayFilterChange()" style="cursor: pointer;" autocomplete="off">
+                </div>
+              </label>
+            </div>
+          </div>
         </div>
         <textarea id="qrStatementText" class="form-control font-monospace statement-textarea mb-3" rows="9" autocomplete="off"></textarea>
 
         <div class="d-flex justify-content-between align-items-center gap-2 mt-2">
-        <button type="button" class="btn btn-light border btn-sm px-3" id="btnCopyDebtText" onclick="copyDebtText(this)">Copy</button>
-        <button type="button" class="btn btn-light border btn-sm px-3" data-bs-dismiss="modal">Đóng</button>
+          <div class="d-flex align-items-center gap-2">
+            <button type="button" class="btn btn-light border btn-sm px-3" id="btnCopyDebtText" onclick="copyDebtText(this)">Copy</button>
+            <button type="button" class="btn btn-success btn-sm px-3 fw-bold text-white" id="btnPayStatementJobs" onclick="confirmPayStatementJobs()">Thanh toán</button>
+          </div>
+          <button type="button" class="btn btn-light border btn-sm px-3" data-bs-dismiss="modal">Đóng</button>
         </div>
       </div>
       </div>
@@ -3795,6 +3812,7 @@
   let filterCustomerVal = "";
   let filterExecutorVal = "";
   let filterStatusVal = "";
+  let filterCostStatusVal = "";
 
   let qrUnpaidCustomersCache = [];
   let qrExecutorsCache = [];
@@ -4120,7 +4138,7 @@
     });
   }
 
-  function showConfirmDialog(message, onConfirm, checkboxLabel = "") {
+  function showConfirmDialog(message, onConfirm, checkboxLabel = "", confirmBtnText = "Xác nhận Xóa", confirmBtnClass = "btn btn-danger btn-sm fw-bold px-4") {
     document.getElementById('customDialogTitle').innerText = 'Xác nhận thao tác';
     document.getElementById('customDialogMessage').innerText = message;
     
@@ -4141,8 +4159,8 @@
     document.getElementById('customDialogCancelBtn').classList.remove('d-none');
     
     const btnConfirm = document.getElementById('customDialogConfirmBtn');
-    btnConfirm.className = 'btn btn-danger btn-sm fw-bold px-4';
-    btnConfirm.innerText = 'Xác nhận Xóa';
+    btnConfirm.className = confirmBtnClass;
+    btnConfirm.innerText = confirmBtnText;
     
     customDialogCallback = onConfirm;
     customDialogModalInstance.show();
@@ -4454,6 +4472,7 @@
     if (type === 'customer') filterCustomerVal = val;
     if (type === 'executor') filterExecutorVal = val;
     if (type === 'status') filterStatusVal = val;
+    if (type === 'costStatus') filterCostStatusVal = val;
     renderMasterTable();
   }
 
@@ -4770,11 +4789,11 @@
   }
 
   function renderCalendarSummary(year, month) {
+    const activeAuth = getEffectiveAccountFilter();
     const monthJobs = (allJobs || []).filter(job => {
       const parts = String(job.ngay || '').split('/');
       if (parts.length !== 3 || Number(parts[1]) !== month + 1 || Number(parts[2]) !== year) return false;
-      const authSelect = document.getElementById('filterAuthCodeCalendar');
-      return !(isAdminAccount && authSelect && authSelect.value && normalizeUsername(job.maDangNhap || '') !== authSelect.value);
+      return !(activeAuth && normalizeUsername(job.maDangNhap || '') !== activeAuth);
     });
     const completed = monthJobs.filter(job => String(job.tinhTrang || '').trim() === 'Xong').length;
     const values = { summaryMonthJobs: monthJobs.length, summaryMonthDone: completed, summaryMonthOpen: Math.max(0, monthJobs.length - completed) };
@@ -4820,8 +4839,7 @@
       let dateIso = `${year}-${mStr}-${dStr}`;
       let dateFormatted = `${dStr}/${mStr}/${year}`;
 
-      const calAuthSel = document.getElementById('filterAuthCodeCalendar');
-      const selectedCalAuth = (isAdminAccount && calAuthSel) ? calAuthSel.value : '';
+      const selectedCalAuth = getEffectiveAccountFilter();
       let dayJobs = allJobs.filter(j => {
         if (j.ngay !== dateFormatted || (j.congViec.trim() === '' && j.khachHang.trim() === '')) return false;
         if (selectedCalAuth && normalizeUsername(j.maDangNhap || '') !== selectedCalAuth) return false;
@@ -4880,8 +4898,7 @@
     document.getElementById('selectedDateHeader').innerText = `${weekdayNames[dateObj.getDay()]}, ${dNum} tháng ${Number(parts[1])} (${lunarStr})`;
 
     const filterText = String(document.getElementById('filterCustomerInput')?.value || '').toLowerCase();
-    const calAuthSel = document.getElementById('filterAuthCodeCalendar');
-    const selectedCalAuth = (isAdminAccount && calAuthSel) ? calAuthSel.value : '';
+    const selectedCalAuth = getEffectiveAccountFilter();
     
     const dayJobs = allJobs.filter(j => {
       if (j.ngay !== formatted || (String(j.congViec || '').trim() === '' && String(j.khachHang || '').trim() === '')) return false;
@@ -5223,11 +5240,7 @@
   }
 
   function getActiveAdminScopedJobs() {
-    if (!isAdminAccount) return allJobs;
-    const isTabLichActive = !document.getElementById('tabLich').classList.contains('d-none');
-    const activeAuthFilter = isTabLichActive
-      ? (document.getElementById('filterAuthCodeCalendar')?.value || '')
-      : (document.getElementById('filterAuthCodeCalendar')?.value || '');
+    const activeAuthFilter = getEffectiveAccountFilter();
     if (!activeAuthFilter) return allJobs;
     return allJobs.filter(j => normalizeUsername(j.maDangNhap || '') === activeAuthFilter);
   }
@@ -5278,13 +5291,16 @@
   function clearAllFilters() {
     document.getElementById('searchTableInput').value = '';
     document.getElementById('filterMonthTable').value = '';
-    selectedAdminAuthFilter = '';
-    const authSel = document.getElementById('filterAuthCodeCalendar');
-    if (authSel) authSel.value = '';
+    userExplicitlySelectedAuthFilter = false;
+    selectedAdminAuthFilter = null;
+    if (isAdminAccount) {
+      populateAdminAuthFilterDropdowns(true);
+    }
     filterJobTypeVal = '';
     filterCustomerVal = '';
     filterExecutorVal = '';
     filterStatusVal = '';
+    filterCostStatusVal = '';
     renderMasterTable();
     renderCalendar();
     renderSelectedDayJobs();
@@ -5504,6 +5520,16 @@
   }
 
   let selectedAdminAuthFilter = null;
+  let userExplicitlySelectedAuthFilter = false;
+
+  function getEffectiveAccountFilter() {
+    if (!isAdminAccount) return '';
+    const ownUser = normalizeUsername(currentUsername);
+    if (!userExplicitlySelectedAuthFilter || selectedAdminAuthFilter === null) {
+      return ownUser;
+    }
+    return selectedAdminAuthFilter;
+  }
 
   function changeCostStatusValue(targetRowNumber, chosenCostStatus) {
     const newCostStatus = normalizeCostStatusLabel(chosenCostStatus);
@@ -5564,15 +5590,12 @@
     const select = document.getElementById('filterAuthCodeCalendar');
     if (!select) return;
 
-    let selectedUser;
     if (applyDefaultOwnCode) {
-      selectedUser = ownUser;
-    } else if (selectedAdminAuthFilter !== null) {
-      selectedUser = selectedAdminAuthFilter;
-    } else {
-      selectedUser = select.value !== undefined ? select.value : ownUser;
+      userExplicitlySelectedAuthFilter = false;
+      selectedAdminAuthFilter = ownUser;
     }
 
+    const selectedUser = getEffectiveAccountFilter();
     if (selectedUser && !sortedUsers.includes(selectedUser)) {
       sortedUsers.push(selectedUser);
     }
@@ -5584,7 +5607,6 @@
     });
     select.innerHTML = options;
     select.value = selectedUser;
-    selectedAdminAuthFilter = selectedUser;
   }
 
   function populateOwnerCodeSelect(selectedUser) {
@@ -5606,7 +5628,8 @@
 
   function onCalendarAuthFilterChange() {
     const select = document.getElementById('filterAuthCodeCalendar');
-    selectedAdminAuthFilter = select ? select.value : '';
+    userExplicitlySelectedAuthFilter = true;
+    selectedAdminAuthFilter = select ? select.value : normalizeUsername(currentUsername);
     renderCalendar();
     renderSelectedDayJobs();
     renderMasterTable(false);
@@ -5616,16 +5639,17 @@
     const monthSelectEl = document.getElementById('filterMonthTable');
     let selectedMonth = monthSelectEl.value;
     const authCodeSelectEl = document.getElementById('filterAuthCodeCalendar');
-    let selectedAuthCodeFilter = (isAdminAccount && authCodeSelectEl) ? authCodeSelectEl.value : '';
 
     if (isAdminAccount && authCodeSelectEl) {
       populateAdminAuthFilterDropdowns(false);
     }
+    const selectedAuthCodeFilter = getEffectiveAccountFilter();
 
     const selectedJobType = filterJobTypeVal;
     const selectedCust = filterCustomerVal;
     const selectedExecutor = filterExecutorVal;
     const selectedStatus = filterStatusVal;
+    const selectedCostStatus = filterCostStatusVal;
 
     const onlyEmptyDays = document.getElementById('toggleOnlyEmptyDays').checked;
     const missingTimeOrAddress = document.getElementById('toggleMissingTimeOrAddress').checked;
@@ -5655,7 +5679,7 @@
     });
     monthSelectEl.innerHTML = monthOpts;
 
-    const hasAnyFilter = Boolean(keyword || selectedMonth || selectedAuthCodeFilter || selectedJobType || selectedCust || selectedExecutor || selectedStatus || missingTimeOrAddress);
+    const hasAnyFilter = Boolean(keyword || selectedMonth || (userExplicitlySelectedAuthFilter && selectedAuthCodeFilter !== normalizeUsername(currentUsername)) || selectedJobType || selectedCust || selectedExecutor || selectedStatus || selectedCostStatus || missingTimeOrAddress);
     const clearBtn = document.getElementById('btnClearAllFilters');
     if (clearBtn) {
       if (hasAnyFilter) clearBtn.classList.add('has-active-filter');
@@ -5693,6 +5717,7 @@
     const matchCust = (j) => !selectedCust || String(j.khachHang || '').trim().toLowerCase() === String(selectedCust || '').toLowerCase();
     const matchExec = (j) => !selectedExecutor || String(j.nguoiThucHien || '').trim().toLowerCase() === String(selectedExecutor || '').toLowerCase();
     const matchSt = (j) => !selectedStatus || j.tinhTrang.trim() === selectedStatus;
+    const matchCostSt = (j) => !selectedCostStatus || normalizeCostStatusLabel(j.ttChiPhi) === selectedCostStatus;
 
     const extractUniqueOptions = (jobsSubset, getterFn, catalogOrder) => {
       const mapLowerToOriginal = new Map();
@@ -5714,36 +5739,43 @@
       return arr;
     };
 
-    const isFilteringSpecific = (keyword !== '' || selectedAuthCodeFilter !== '' || selectedJobType !== '' || selectedCust !== '' || selectedExecutor !== '' || selectedStatus !== '' || missingTimeOrAddress);
+    const isFilteringSpecific = (keyword !== '' || selectedAuthCodeFilter !== '' || selectedJobType !== '' || selectedCust !== '' || selectedExecutor !== '' || selectedStatus !== '' || selectedCostStatus !== '' || missingTimeOrAddress);
     const effectiveBaseJobs = (onlyEmptyDays && !isFilteringSpecific && !hideCompleted) ? [] : baseFilteredJobs;
 
     const activeJobTypes = extractUniqueOptions(
-      effectiveBaseJobs.filter(j => matchCust(j) && matchExec(j) && matchSt(j)),
+      effectiveBaseJobs.filter(j => matchCust(j) && matchExec(j) && matchSt(j) && matchCostSt(j)),
       j => j.congViec,
       jobTypes
     );
     if (selectedJobType && !activeJobTypes.some(x => String(x || '').toLowerCase() === String(selectedJobType || '').toLowerCase())) activeJobTypes.unshift(selectedJobType);
 
     const activeCustomers = extractUniqueOptions(
-      effectiveBaseJobs.filter(j => matchJT(j) && matchExec(j) && matchSt(j)),
+      effectiveBaseJobs.filter(j => matchJT(j) && matchExec(j) && matchSt(j) && matchCostSt(j)),
       j => j.khachHang,
       customerList
     );
     if (selectedCust && !activeCustomers.some(x => String(x || '').toLowerCase() === String(selectedCust || '').toLowerCase())) activeCustomers.unshift(selectedCust);
 
     const activeExecutors = extractUniqueOptions(
-      effectiveBaseJobs.filter(j => matchJT(j) && matchCust(j) && matchSt(j)),
+      effectiveBaseJobs.filter(j => matchJT(j) && matchCust(j) && matchSt(j) && matchCostSt(j)),
       j => j.nguoiThucHien || "Lê Tân",
       executorList
     );
     if (selectedExecutor && !activeExecutors.some(x => String(x || '').toLowerCase() === String(selectedExecutor || '').toLowerCase())) activeExecutors.unshift(selectedExecutor);
 
     const activeStatuses = extractUniqueOptions(
-      effectiveBaseJobs.filter(j => matchJT(j) && matchCust(j) && matchExec(j)),
+      effectiveBaseJobs.filter(j => matchJT(j) && matchCust(j) && matchExec(j) && matchCostSt(j)),
       j => j.tinhTrang || "Chờ",
       statusList
     );
     if (selectedStatus && !activeStatuses.some(x => String(x || '').toLowerCase() === String(selectedStatus || '').toLowerCase())) activeStatuses.unshift(selectedStatus);
+
+    const activeCostStatuses = extractUniqueOptions(
+      effectiveBaseJobs.filter(j => matchJT(j) && matchCust(j) && matchExec(j) && matchSt(j)),
+      j => normalizeCostStatusLabel(j.ttChiPhi),
+      COST_STATUS_OPTIONS
+    );
+    if (selectedCostStatus && !activeCostStatuses.includes(selectedCostStatus)) activeCostStatuses.unshift(selectedCostStatus);
 
     const visibleCols = tableColumns.filter(c => c.visible);
     let theadHtml = `<tr>`;
@@ -5788,6 +5820,15 @@
             <ul class="dropdown-menu shadow-sm py-1" id="menuFilterStatus" style="font-size: 13px; max-height: 250px; overflow-y: auto;"></ul>
           </div>
         </th>`;
+      } else if (col.id === 'ttChiPhi') {
+        theadHtml += `<th ${thAttr}>
+          <div class="dropdown d-inline-block w-100">
+            <button class="btn btn-sm dropdown-toggle fw-semibold border bg-white text-danger shadow-sm w-100 py-1" type="button" data-bs-toggle="dropdown" id="btnDropdownCostStatus" style="font-size: 12px; border-radius: 6px;">
+              ${selectedCostStatus ? selectedCostStatus + ' ✕' : 'TT Chi phí'}
+            </button>
+            <ul class="dropdown-menu shadow-sm py-1" id="menuFilterCostStatus" style="font-size: 13px; max-height: 250px; overflow-y: auto;"></ul>
+          </div>
+        </th>`;
       } else {
         let alignClass = col.align === 'end' ? 'text-end' : '';
         theadHtml += `<th class="${alignClass}" ${thAttr}>${col.label}</th>`;
@@ -5828,6 +5869,14 @@
       });
       const sMenu = document.getElementById('menuFilterStatus');
       if (sMenu) sMenu.innerHTML = statusMenuHtml;
+
+      let costStatusMenuHtml = `<li><a class="dropdown-item ${!selectedCostStatus ? 'active fw-bold' : ''}" href="javascript:void(0)" onclick="setFilter('costStatus', '')">Tất cả TT Chi phí (${activeCostStatuses.length})</a></li>`;
+      activeCostStatuses.forEach(cs => {
+        const isAct = selectedCostStatus === cs;
+        costStatusMenuHtml += `<li><a class="dropdown-item ${isAct ? 'active fw-bold' : ''}" href="javascript:void(0)" onclick="setFilter('costStatus', '${escapeJsQuotes(cs)}')">${cs}</a></li>`;
+      });
+      const csMenu = document.getElementById('menuFilterCostStatus');
+      if (csMenu) csMenu.innerHTML = costStatusMenuHtml;
     }, 50);
 
     let displayItems = [];
@@ -5860,7 +5909,7 @@
       });
     } else {
       baseFilteredJobs.forEach(j => {
-        if (!matchJT(j) || !matchCust(j) || !matchExec(j) || !matchSt(j)) return;
+        if (!matchJT(j) || !matchCust(j) || !matchExec(j) || !matchSt(j) || !matchCostSt(j)) return;
         displayItems.push({ isEmpty: false, job: j, dateStr: j.ngay, thu: j.thu });
       });
     }
@@ -5939,10 +5988,7 @@
           sumChuaTT += (gVal > 0 ? Math.max(0, gVal - cCoc) : lVal);
         }
 
-        let isXong = (j.tinhTrang === 'Xong');
-        let isChuaTT = (j.tinhTrang === 'Chưa TT');
-        let rowClassAttr = isXong ? 'row-status-xong' : (isChuaTT ? 'row-status-chuatt' : '');
-        if (isToday) rowClassAttr += (rowClassAttr ? ' today-row' : 'today-row');
+        let rowClassAttr = isToday ? 'today-row' : '';
 
         const parsedDetail = splitJobDetail(j.chiTiet);
         let thoiGianDisplay = parsedDetail.thoiGian || '-';
@@ -6111,7 +6157,7 @@
           const safeCust = escapeJsQuotes(j.khachHang || '');
 
           cardsHtml += `
-            <div class="mobile-job-card ${j.tinhTrang === 'Xong' ? 'card-status-xong' : (j.tinhTrang === 'Chưa TT' ? 'card-status-chuatt' : '')} ${isToday ? 'card-today' : ''}">
+            <div class="mobile-job-card ${isToday ? 'card-today' : ''}">
               <div class="d-flex justify-content-between align-items-center mb-2">
                 <div class="d-flex align-items-center gap-1.5">
                   <span class="fw-bold text-dark" style="font-size: 13.5px;">${item.thu}, ${j.ngay}</span>
@@ -6435,7 +6481,7 @@
     document.getElementById('formRowNumber').value = '';
     document.getElementById('formChiTiet').value = '';
     resetExtraJobEntries();
-    const activeAuthFilter = document.getElementById('filterAuthCodeCalendar')?.value || '';
+    const activeAuthFilter = getEffectiveAccountFilter();
     populateOwnerCodeSelect(activeAuthFilter || currentUsername);
     document.getElementById('formThoiGian').value = '';
     document.getElementById('formDiaChi').value = '';
@@ -6660,13 +6706,23 @@
   }
 
   let qrShowMoney = true;
+  let qrShowDetails = true;
+  let currentStatementJobs = [];
 
-  function toggleQrShowMoney() {
-    qrShowMoney = !qrShowMoney;
-    const btn = document.getElementById('btnToggleQrMoney');
-    if (btn) {
-      btn.innerText = qrShowMoney ? 'Hiện giá trị' : 'Ẩn giá trị';
-    }
+  function updateQrDisplayFilterBadge() {
+    const badge = document.getElementById('qrDisplayFilterBadge');
+    if (!badge) return;
+    const hiddenCount = (qrShowMoney ? 0 : 1) + (qrShowDetails ? 0 : 1);
+    badge.innerText = hiddenCount;
+    badge.classList.toggle('d-none', hiddenCount === 0);
+  }
+
+  function onQrDisplayFilterChange() {
+    const moneyCb = document.getElementById('qrToggleShowMoney');
+    const detailCb = document.getElementById('qrToggleShowDetails');
+    qrShowMoney = moneyCb ? moneyCb.checked : true;
+    qrShowDetails = detailCb ? detailCb.checked : true;
+    updateQrDisplayFilterBadge();
     generateQrStatement();
   }
 
@@ -6698,14 +6754,19 @@
     if (costStatusSel) costStatusSel.value = '';
 
     qrShowMoney = true;
-    const toggleBtn = document.getElementById('btnToggleQrMoney');
-    if (toggleBtn) toggleBtn.innerText = 'Hiện giá trị';
+    qrShowDetails = true;
+    const moneyCb = document.getElementById('qrToggleShowMoney');
+    if (moneyCb) moneyCb.checked = true;
+    const detailCb = document.getElementById('qrToggleShowDetails');
+    if (detailCb) detailCb.checked = true;
+    updateQrDisplayFilterBadge();
 
     document.getElementById('qrSearchCustomerInput').value = '';
     document.getElementById('qrSearchExecutorInput').value = '';
     document.getElementById('qrExecutorSelect').value = '';
     
     updateQrDropdownsAndStatement(filterCustomerVal);
+    if (window.lucide) lucide.createIcons();
     debtQrModalInstance.show();
   }
 
@@ -6798,6 +6859,7 @@
   }
 
   function generateQrStatement() {
+    currentStatementJobs = [];
     const isCustMode = document.getElementById('modeCustomer').checked;
     const selectedMonth = document.getElementById('qrMonthSelect').value;
     const selectedStatus = document.getElementById('qrStatusSelect')?.value || '';
@@ -6821,6 +6883,7 @@
   }
 
   function generateCustomerDebtStatement(cust, selectedMonth, selectedStatus = 'Chưa TT') {
+    currentStatementJobs = [];
     const unpaidJobs = getActiveAdminScopedJobs().filter(j => {
       if (!j.khachHang) return false;
       if (cust !== '__ALL__' && String(j.khachHang).trim().toLowerCase() !== String(cust || '').toLowerCase()) return false;
@@ -6838,6 +6901,7 @@
       return;
     }
 
+    currentStatementJobs = unpaidJobs;
     let totalValue = 0;
     let totalDeposit = 0;
     let lines = [];
@@ -6856,8 +6920,9 @@
 
       const parsed = splitJobDetail(j.chiTiet);
       const cleanDetail = [parsed.thoiGian, parsed.diaChi].filter(Boolean).join(' - ');
+      const detailStr = (qrShowDetails && cleanDetail) ? ` (${cleanDetail})` : '';
 
-      let lineStr = `${i + 1}. Ngày ${j.ngay}: ${j.congViec}${cleanDetail ? ' (' + cleanDetail + ')' : ''}`;
+      let lineStr = `${i + 1}. Ngày ${j.ngay}: ${j.congViec}${detailStr}`;
       if (qrShowMoney && !selectedStatus && j.tinhTrang) {
         lineStr += ` [${j.tinhTrang}]`;
       }
@@ -6877,8 +6942,8 @@
       lines.push(`Tổng giá trị: ${totalValue.toLocaleString('vi-VN')} đ`);
       if (totalDeposit > 0) {
         lines.push(`Đã cọc: -${totalDeposit.toLocaleString('vi-VN')} đ`);
+        lines.push(`TỔNG CÒN LẠI: ${totalRemain.toLocaleString('vi-VN')} đ`);
       }
-      lines.push(`TỔNG CÒN LẠI: ${totalRemain.toLocaleString('vi-VN')} đ`);
       lines.push(`----------------------------`);
     }
 
@@ -6886,6 +6951,7 @@
   }
 
   function generateExecutorSalaryStatement(execName, selectedMonth, selectedStatus = '') {
+    currentStatementJobs = [];
     const filteredJobs = getActiveAdminScopedJobs().filter(j => {
       const jExec = (j.nguoiThucHien || '').trim();
       if (!jExec) return false;
@@ -6905,6 +6971,7 @@
       return;
     }
 
+    currentStatementJobs = filteredJobs;
     let totalSalary = 0;
     let lines = [];
 
@@ -6919,7 +6986,7 @@
 
       const parsed = splitJobDetail(j.chiTiet);
       const cleanDetail = [parsed.thoiGian, parsed.diaChi].filter(Boolean).join(' - ');
-      const detailStr = cleanDetail ? ` (${cleanDetail})` : '';
+      const detailStr = (qrShowDetails && cleanDetail) ? ` (${cleanDetail})` : '';
 
       let lineStr = `${i + 1}. Ngày ${j.ngay}: ${j.congViec || 'Công việc'}${detailStr}`;
       if (qrShowMoney) {
@@ -6939,6 +7006,132 @@
     }
 
     document.getElementById('qrStatementText').value = lines.join('\n');
+  }
+
+  function confirmPayStatementJobs() {
+    const isCustMode = document.getElementById('modeCustomer').checked;
+    if (!currentStatementJobs || currentStatementJobs.length === 0) {
+      showToast('Chưa có công việc nào trong bảng kê để thanh toán!', true);
+      return;
+    }
+
+    if (isCustMode) {
+      const cust = document.getElementById('qrCustomerSelect').value;
+      if (!cust) {
+        showToast('Vui lòng chọn khách hàng trước khi thanh toán!', true);
+        return;
+      }
+      const targetJobs = currentStatementJobs.filter(j => String(j.tinhTrang || '').trim() !== 'Xong');
+      if (targetJobs.length === 0) {
+        showToast('Tất cả công việc trong bảng kê đã ở tình trạng "Xong"!');
+        return;
+      }
+      const targetName = cust === '__ALL__' ? 'tất cả khách hàng trong bảng kê' : `khách hàng "${cust}"`;
+      const rowNumbers = targetJobs.map(j => Number(j.rowNumber)).filter(Boolean);
+
+      showConfirmDialog(
+        `Xác nhận thanh toán cho ${targetName}? Toàn bộ ${targetJobs.length} công việc trong bảng kê sẽ chuyển sang tình trạng "Xong".`,
+        () => {
+          const btnPay = document.getElementById('btnPayStatementJobs');
+          const oldHtml = btnPay ? btnPay.innerHTML : 'Thanh toán';
+          if (btnPay) {
+            btnPay.disabled = true;
+            btnPay.innerText = 'Đang xử lý...';
+          }
+
+          rowNumbers.forEach(rNum => {
+            const localJob = allJobs.find(item => Number(item.rowNumber) === rNum);
+            if (localJob) localJob.tinhTrang = 'Xong';
+            const foundEntry = Object.entries(firebaseJobsMap || {}).find(([k, v]) => v && Number(v.rowNumber) === rNum);
+            if (foundEntry && foundEntry[1]) foundEntry[1].tinhTrang = 'Xong';
+          });
+
+          google.script.run
+            .withSuccessHandler(function(res) {
+              if (res && Array.isArray(res.jobs)) {
+                allJobs = res.jobs;
+              }
+              if (btnPay) {
+                btnPay.disabled = false;
+                btnPay.innerHTML = oldHtml;
+              }
+              renderCalendar();
+              renderSelectedDayJobs();
+              renderMasterTable();
+              updateQrDropdownsAndStatement();
+              showToast(`Đã thanh toán và chuyển ${targetJobs.length} công việc sang "Xong"`);
+            })
+            .withFailureHandler(function() {
+              if (btnPay) {
+                btnPay.disabled = false;
+                btnPay.innerHTML = oldHtml;
+              }
+              showToast('Lỗi cập nhật trạng thái thanh toán!', true);
+            })
+            .batchUpdateStatus(rowNumbers, 'Xong');
+        },
+        "",
+        "Xác nhận Thanh toán",
+        "btn btn-success btn-sm fw-bold px-4"
+      );
+    } else {
+      const exec = document.getElementById('qrExecutorSelect').value;
+      if (!exec) {
+        showToast('Vui lòng chọn nhân sự trước khi thanh toán!', true);
+        return;
+      }
+      const targetJobs = currentStatementJobs.filter(j => normalizeCostStatusLabel(j.ttChiPhi) !== 'Đã thanh toán');
+      if (targetJobs.length === 0) {
+        showToast('Tất cả công việc trong bảng kê đã được thanh toán chi phí!');
+        return;
+      }
+      const targetName = exec === '__ALL__' ? 'tất cả nhân sự trong bảng kê' : `nhân sự "${exec}"`;
+      const rowNumbers = targetJobs.map(j => Number(j.rowNumber)).filter(Boolean);
+
+      showConfirmDialog(
+        `Xác nhận thanh toán chi phí cho ${targetName}? Toàn bộ ${targetJobs.length} công việc trong bảng kê sẽ chuyển sang "Đã thanh toán".`,
+        () => {
+          const btnPay = document.getElementById('btnPayStatementJobs');
+          const oldHtml = btnPay ? btnPay.innerHTML : 'Thanh toán';
+          if (btnPay) {
+            btnPay.disabled = true;
+            btnPay.innerText = 'Đang xử lý...';
+          }
+
+          rowNumbers.forEach(rNum => {
+            const localJob = allJobs.find(item => Number(item.rowNumber) === rNum);
+            if (localJob) localJob.ttChiPhi = 'Đã thanh toán';
+            const foundEntry = Object.entries(firebaseJobsMap || {}).find(([k, v]) => v && Number(v.rowNumber) === rNum);
+            if (foundEntry && foundEntry[1]) foundEntry[1].ttChiPhi = 'Đã thanh toán';
+          });
+
+          google.script.run
+            .withSuccessHandler(function(res) {
+              if (res && Array.isArray(res.jobs)) {
+                allJobs = res.jobs;
+              }
+              if (btnPay) {
+                btnPay.disabled = false;
+                btnPay.innerHTML = oldHtml;
+              }
+              renderMasterTable();
+              updateQrDropdownsAndStatement();
+              showToast(`Đã thanh toán chi phí cho ${targetJobs.length} công việc`);
+            })
+            .withFailureHandler(function() {
+              if (btnPay) {
+                btnPay.disabled = false;
+                btnPay.innerHTML = oldHtml;
+              }
+              showToast('Lỗi cập nhật thanh toán chi phí!', true);
+            })
+            .batchUpdateCostStatus(rowNumbers, 'Đã thanh toán');
+        },
+        "",
+        "Xác nhận Thanh toán",
+        "btn btn-success btn-sm fw-bold px-4"
+      );
+    }
   }
 
   function copyDebtText(btnEl) {
@@ -7298,6 +7491,10 @@
         } catch (e) {}
         if (oldUser !== currentUsername && isAdminAccount) {
           adminDefaultFilterInitialized = false;
+          if (!userExplicitlySelectedAuthFilter || selectedAdminAuthFilter === oldUser) {
+            userExplicitlySelectedAuthFilter = false;
+            selectedAdminAuthFilter = null;
+          }
         }
         const menuBadge = document.getElementById('menuAuthCodeBadge');
         if (menuBadge) menuBadge.innerText = currentDisplayName;
@@ -7701,6 +7898,7 @@
     isAdminAccount = false;
     adminDefaultFilterInitialized = false;
     selectedAdminAuthFilter = null;
+    userExplicitlySelectedAuthFilter = false;
     allJobs = [];
     firebaseJobsMap = {};
     authorizedCodesMap = {};
