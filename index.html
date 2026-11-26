@@ -314,11 +314,10 @@
       border-left: 3px dashed #7b1113 !important;
     }
 
-    #masterTableContainer table td:nth-child(5) { text-align: center !important; }
-    #masterTableContainer table td:nth-child(6) { text-align: left !important; }
-    #masterTableContainer table td:nth-child(10), 
-    #masterTableContainer table td:nth-child(11), 
-    #masterTableContainer table td:nth-child(12) { text-align: right !important; }
+    #masterTableContainer table th,
+    #masterTableContainer table td {
+      text-align: center !important;
+    }
 
     .job-badge { 
       display: inline-block !important;
@@ -1035,10 +1034,17 @@
       color: #475569;
       font-weight: 700;
       font-size: 12px;
-      text-transform: uppercase;
-      letter-spacing: 0.4px;
+      text-transform: none !important;
+      letter-spacing: 0.1px;
       border-bottom: 2px solid #e2e8f0 !important;
       padding: 12px 10px !important;
+    }
+    #masterTableContainer table thead th .btn,
+    #masterTableContainer .dropdown-menu .dropdown-item,
+    #filterMonthTable,
+    #filterAuthCodeCalendar,
+    #btnQrDisplayFilter {
+      text-transform: none !important;
     }
 
     #masterTableContainer table tbody tr {
@@ -1423,7 +1429,7 @@
       #masterTableContainer table td.col-address-cell {
         min-width: 120px !important;
         max-width: 280px !important;
-        text-align: left !important;
+        text-align: center !important;
         line-height: 1.38;
       }
     }
@@ -1441,7 +1447,7 @@
         white-space: normal !important;
         min-width: 210px !important;
         max-width: 290px !important;
-        text-align: left !important;
+        text-align: center !important;
         line-height: 1.4;
       }
     }
@@ -2165,22 +2171,28 @@
               <ul class="dropdown-menu column-visibility-dropdown shadow" id="columnVisibilityDropdown"></ul>
             </div>
 
-            <!-- Nút gộp 3 bộ lọc: Chỉ ngày trống, Thiếu giờ/địa chỉ, Ẩn công việc đã xong -->
+            <!-- Nút Bộ lọc hiển thị -->
             <div class="dropdown">
               <button class="btn btn-sm dropdown-toggle btn-toolbar-modern" type="button" data-bs-toggle="dropdown" data-bs-auto-close="outside" aria-expanded="false">
                 <i data-lucide="sliders-horizontal"></i>
                 <span>Bộ lọc hiển thị</span>
                 <span id="quickFilterActiveBadge" class="badge rounded-pill d-none ms-1" style="background-color: #7b1113; font-size: 10px; padding: 2px 6px;">0</span>
               </button>
-              <div class="dropdown-menu column-visibility-dropdown shadow" style="min-width: 225px !important;">
+              <div class="dropdown-menu column-visibility-dropdown shadow" style="min-width: 245px !important;">
                 <div class="px-2 py-1 mb-1 d-flex justify-content-between align-items-center border-bottom" style="font-size: 11.5px;">
-                  <span class="fw-bold text-uppercase text-muted" style="letter-spacing: 0.5px;">Lọc nhanh</span>
+                  <span class="fw-bold text-muted" style="letter-spacing: 0.2px;">Lọc nhanh</span>
                   <button type="button" class="btn btn-link btn-sm p-0 text-decoration-none text-danger fw-semibold" style="font-size: 11.5px;" onclick="resetQuickFilters(event)">Tắt hết</button>
                 </div>
-                <label class="col-vis-item justify-content-between mb-0" for="toggleOnlyEmptyDays">
-                  <span>Chỉ ngày trống</span>
+                <label class="col-vis-item justify-content-between mb-0" for="toggleShowEmptyDays">
+                  <span>Hiển thị những ngày trống</span>
                   <div class="form-check form-switch mb-0 p-0 d-flex align-items-center">
-                    <input class="form-check-input m-0" type="checkbox" id="toggleOnlyEmptyDays" onchange="saveTablePrefs(); renderMasterTable(false);" style="cursor: pointer;" autocomplete="off">
+                    <input class="form-check-input m-0" type="checkbox" id="toggleShowEmptyDays" onchange="onEmptyDaysToggleChange('show'); saveTablePrefs(); renderMasterTable(false);" style="cursor: pointer;" autocomplete="off">
+                  </div>
+                </label>
+                <label class="col-vis-item justify-content-between mb-0" for="toggleOnlyEmptyDays">
+                  <span>Chỉ hiện ngày trống</span>
+                  <div class="form-check form-switch mb-0 p-0 d-flex align-items-center">
+                    <input class="form-check-input m-0" type="checkbox" id="toggleOnlyEmptyDays" onchange="onEmptyDaysToggleChange('only'); saveTablePrefs(); renderMasterTable(false);" style="cursor: pointer;" autocomplete="off">
                   </div>
                 </label>
                 <label class="col-vis-item justify-content-between mb-0" for="toggleMissingTimeOrAddress">
@@ -2193,6 +2205,13 @@
                   <span>Ẩn công việc đã xong</span>
                   <div class="form-check form-switch mb-0 p-0 d-flex align-items-center">
                     <input class="form-check-input m-0" type="checkbox" id="toggleHideCompleted" onchange="saveTablePrefs(); renderMasterTable(false);" style="cursor: pointer;" autocomplete="off">
+                  </div>
+                </label>
+                <div class="my-1 border-top"></div>
+                <label class="col-vis-item justify-content-between mb-0" for="toggleScrollToToday">
+                  <span>Cuộn tới hôm nay</span>
+                  <div class="form-check form-switch mb-0 p-0 d-flex align-items-center">
+                    <input class="form-check-input m-0" type="checkbox" id="toggleScrollToToday" checked onchange="saveTablePrefs(); if(this.checked) scrollToTodayInTaskList(true);" style="cursor: pointer;" autocomplete="off">
                   </div>
                 </label>
               </div>
@@ -2521,7 +2540,7 @@
             </button>
             <div class="dropdown-menu dropdown-menu-end column-visibility-dropdown shadow" style="min-width: 225px !important;">
               <div class="px-2 py-1 mb-1 border-bottom" style="font-size: 11.5px;">
-                <span class="fw-bold text-uppercase text-muted" style="letter-spacing: 0.5px;">Tùy chọn hiển thị</span>
+                <span class="fw-bold text-muted" style="letter-spacing: 0.2px;">Tùy chọn hiển thị</span>
               </div>
               <label class="col-vis-item justify-content-between mb-0" for="qrToggleShowMoney">
                 <span>Ẩn/hiện giá trị</span>
@@ -3844,9 +3863,9 @@
     { id: 'khachHang', label: 'Khách hàng', removable: false, visible: true },
     { id: 'nguoiThucHien', label: 'Người thực hiện', removable: false, visible: true },
     { id: 'tinhTrang', label: 'Tình trạng', removable: false, visible: true },
-    { id: 'giaTri', label: 'Giá trị', removable: false, visible: true, align: 'end' },
-    { id: 'daCoc', label: 'Đã cọc', removable: true, visible: true, align: 'end' },
-    { id: 'chiPhi', label: 'Chi phí', removable: true, visible: true, align: 'end' },
+    { id: 'giaTri', label: 'Giá trị', removable: false, visible: true, align: 'center' },
+    { id: 'daCoc', label: 'Đã cọc', removable: true, visible: true, align: 'center' },
+    { id: 'chiPhi', label: 'Chi phí', removable: true, visible: true, align: 'center' },
     { id: 'ttChiPhi', label: 'TT Chi phí', removable: true, visible: true },
     { id: 'maDangNhap', label: 'Tài khoản', removable: true, visible: false, width: '125px' }
   ];
@@ -3966,7 +3985,7 @@
 
     let html = `
       <div class="px-2 py-1 mb-1 d-flex justify-content-between align-items-center border-bottom" style="font-size: 11.5px;">
-        <span class="fw-bold text-uppercase text-muted" style="letter-spacing: 0.5px;">Tùy chọn cột</span>
+        <span class="fw-bold text-muted" style="letter-spacing: 0.2px;">Tùy chọn cột</span>
         <span class="badge bg-light text-secondary border px-2 py-0.5" style="font-size: 11px;">${activeCount}/${totalRemovable} hiển thị</span>
       </div>
     `;
@@ -4663,6 +4682,9 @@
       renderColumnVisibilityMenu();
       renderMasterTable();
       if (window.lucide) lucide.createIcons();
+      if (document.getElementById('toggleScrollToToday')?.checked) {
+        setTimeout(() => scrollToTodayInTaskList(false), 80);
+      }
     }
   }
 
@@ -5288,9 +5310,17 @@
     document.getElementById('repTotalUnpaid').innerText = sumChuaTT.toLocaleString('vi-VN') + ' đ';
   }
 
+  function getCurrentMonthKey() {
+    const now = new Date();
+    return `${String(now.getMonth() + 1).padStart(2, '0')}/${now.getFullYear()}`;
+  }
+
   function clearAllFilters() {
     document.getElementById('searchTableInput').value = '';
-    document.getElementById('filterMonthTable').value = '';
+    const defaultMonth = getCurrentMonthKey();
+    const monthEl = document.getElementById('filterMonthTable');
+    if (monthEl) monthEl.value = defaultMonth;
+    tableMonthInitialized = true;
     userExplicitlySelectedAuthFilter = false;
     selectedAdminAuthFilter = null;
     if (isAdminAccount) {
@@ -5304,7 +5334,7 @@
     renderMasterTable();
     renderCalendar();
     renderSelectedDayJobs();
-    showToast('Đã xóa bộ lọc');
+    showToast('Đã đặt lại bộ lọc mặc định');
   }
   function addCatalogItemDirect() {
     const inputEl = document.getElementById('newCatalogItemInput');
@@ -5412,19 +5442,65 @@
     });
   }
 
+  function onEmptyDaysToggleChange(mode) {
+    const showEl = document.getElementById('toggleShowEmptyDays');
+    const onlyEl = document.getElementById('toggleOnlyEmptyDays');
+    if (mode === 'show' && showEl && showEl.checked && onlyEl) {
+      onlyEl.checked = false;
+    } else if (mode === 'only' && onlyEl && onlyEl.checked && showEl) {
+      showEl.checked = false;
+    }
+  }
+
+  function scrollToTodayInTaskList(fromUserToggle = false) {
+    const tabChitietEl = document.getElementById('tabChitiet');
+    if (!tabChitietEl || tabChitietEl.classList.contains('d-none')) return;
+
+    const findTodayTarget = () => {
+      if (isMobileCardView) {
+        return document.getElementById('mobileTodayCard') || document.getElementById('masterTodayRow');
+      }
+      return document.getElementById('masterTodayRow') || document.getElementById('mobileTodayCard');
+    };
+
+    let targetEl = findTodayTarget();
+    if (!targetEl && fromUserToggle) {
+      const monthSelectEl = document.getElementById('filterMonthTable');
+      const currentMonthKey = getCurrentMonthKey();
+      if (monthSelectEl && monthSelectEl.value !== currentMonthKey && monthSelectEl.value !== '') {
+        monthSelectEl.value = currentMonthKey;
+        tableMonthInitialized = true;
+        renderMasterTable();
+        targetEl = findTodayTarget();
+      }
+    }
+
+    if (targetEl) {
+      targetEl.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      if (fromUserToggle) {
+        showToast('Đã cuộn tới hôm nay');
+      }
+    } else if (fromUserToggle) {
+      showToast('Hôm nay chưa có công việc (bật "Hiển thị những ngày trống" để xem)', true);
+    }
+  }
+
   function updateQuickFilterBadge() {
     const badge = document.getElementById('quickFilterActiveBadge');
     if (!badge) return;
+    const c0 = document.getElementById('toggleShowEmptyDays')?.checked ? 1 : 0;
     const c1 = document.getElementById('toggleOnlyEmptyDays')?.checked ? 1 : 0;
     const c2 = document.getElementById('toggleMissingTimeOrAddress')?.checked ? 1 : 0;
     const c3 = document.getElementById('toggleHideCompleted')?.checked ? 1 : 0;
-    const count = c1 + c2 + c3;
+    const count = c0 + c1 + c2 + c3;
     badge.innerText = count;
     badge.classList.toggle('d-none', count === 0);
   }
 
   function resetQuickFilters(e) {
     if (e) e.stopPropagation();
+    const showEl = document.getElementById('toggleShowEmptyDays');
+    if (showEl) showEl.checked = false;
     document.getElementById('toggleOnlyEmptyDays').checked = false;
     document.getElementById('toggleMissingTimeOrAddress').checked = false;
     document.getElementById('toggleHideCompleted').checked = false;
@@ -5435,22 +5511,35 @@
 
   function loadTablePrefs() {
     try {
+      const showEmpty = localStorage.getItem('pref_show_empty_days');
       const onlyEmpty = localStorage.getItem('pref_only_empty_days');
       const missingTimeAddr = localStorage.getItem('pref_missing_time_addr');
       const hideCompleted = localStorage.getItem('pref_hide_completed');
+      const scrollToToday = localStorage.getItem('pref_scroll_to_today');
       
+      const showEl = document.getElementById('toggleShowEmptyDays');
+      if (showEl && showEmpty !== null) showEl.checked = (showEmpty === 'true');
       if (onlyEmpty !== null) document.getElementById('toggleOnlyEmptyDays').checked = (onlyEmpty === 'true');
+      if (showEl && showEl.checked && document.getElementById('toggleOnlyEmptyDays').checked) {
+        document.getElementById('toggleOnlyEmptyDays').checked = false;
+      }
       if (missingTimeAddr !== null) document.getElementById('toggleMissingTimeOrAddress').checked = (missingTimeAddr === 'true');
       if (hideCompleted !== null) document.getElementById('toggleHideCompleted').checked = (hideCompleted === 'true');
+      const scrollEl = document.getElementById('toggleScrollToToday');
+      if (scrollEl) scrollEl.checked = (scrollToToday === null) ? true : (scrollToToday === 'true');
       updateQuickFilterBadge();
     } catch (e) {}
   }
 
   function saveTablePrefs() {
     try {
+      const showEl = document.getElementById('toggleShowEmptyDays');
+      if (showEl) localStorage.setItem('pref_show_empty_days', showEl.checked);
       localStorage.setItem('pref_only_empty_days', document.getElementById('toggleOnlyEmptyDays').checked);
       localStorage.setItem('pref_missing_time_addr', document.getElementById('toggleMissingTimeOrAddress').checked);
       localStorage.setItem('pref_hide_completed', document.getElementById('toggleHideCompleted').checked);
+      const scrollEl = document.getElementById('toggleScrollToToday');
+      if (scrollEl) localStorage.setItem('pref_scroll_to_today', scrollEl.checked);
       updateQuickFilterBadge();
     } catch (e) {}
   }
@@ -5634,10 +5723,20 @@
     renderSelectedDayJobs();
     renderMasterTable(false);
   }
+  let tableMonthInitialized = false;
+
   function renderMasterTable() {
     const keyword = document.getElementById('searchTableInput').value.toLowerCase().trim();
     const monthSelectEl = document.getElementById('filterMonthTable');
+    const todayFormatted = getTodayFormatted();
+    const currentMonthKey = getCurrentMonthKey();
+
     let selectedMonth = monthSelectEl.value;
+    if (!tableMonthInitialized) {
+      selectedMonth = currentMonthKey;
+      tableMonthInitialized = true;
+    }
+
     const authCodeSelectEl = document.getElementById('filterAuthCodeCalendar');
 
     if (isAdminAccount && authCodeSelectEl) {
@@ -5651,13 +5750,10 @@
     const selectedStatus = filterStatusVal;
     const selectedCostStatus = filterCostStatusVal;
 
+    const showEmptyDays = Boolean(document.getElementById('toggleShowEmptyDays')?.checked);
     const onlyEmptyDays = document.getElementById('toggleOnlyEmptyDays').checked;
     const missingTimeOrAddress = document.getElementById('toggleMissingTimeOrAddress').checked;
     const hideCompleted = document.getElementById('toggleHideCompleted').checked;
-
-    const todayFormatted = getTodayFormatted();
-    const now = new Date();
-    const currentMonthKey = `${String(now.getMonth() + 1).padStart(2, '0')}/${now.getFullYear()}`;
 
     const setMonths = new Set([currentMonthKey]);
     allJobs.forEach(j => {
@@ -5679,7 +5775,7 @@
     });
     monthSelectEl.innerHTML = monthOpts;
 
-    const hasAnyFilter = Boolean(keyword || selectedMonth || (userExplicitlySelectedAuthFilter && selectedAuthCodeFilter !== normalizeUsername(currentUsername)) || selectedJobType || selectedCust || selectedExecutor || selectedStatus || selectedCostStatus || missingTimeOrAddress);
+    const hasAnyFilter = Boolean(keyword || (selectedMonth !== currentMonthKey) || (userExplicitlySelectedAuthFilter && selectedAuthCodeFilter !== normalizeUsername(currentUsername)) || selectedJobType || selectedCust || selectedExecutor || selectedStatus || selectedCostStatus || missingTimeOrAddress);
     const clearBtn = document.getElementById('btnClearAllFilters');
     if (clearBtn) {
       if (hasAnyFilter) clearBtn.classList.add('has-active-filter');
@@ -5739,7 +5835,7 @@
       return arr;
     };
 
-    const isFilteringSpecific = (keyword !== '' || selectedAuthCodeFilter !== '' || selectedJobType !== '' || selectedCust !== '' || selectedExecutor !== '' || selectedStatus !== '' || selectedCostStatus !== '' || missingTimeOrAddress);
+    const isFilteringSpecific = (keyword !== '' || selectedJobType !== '' || selectedCust !== '' || selectedExecutor !== '' || selectedStatus !== '' || selectedCostStatus !== '' || missingTimeOrAddress);
     const effectiveBaseJobs = (onlyEmptyDays && !isFilteringSpecific && !hideCompleted) ? [] : baseFilteredJobs;
 
     const activeJobTypes = extractUniqueOptions(
@@ -5830,15 +5926,14 @@
           </div>
         </th>`;
       } else {
-        let alignClass = col.align === 'end' ? 'text-end' : '';
-        theadHtml += `<th class="${alignClass}" ${thAttr}>${col.label}</th>`;
+        theadHtml += `<th class="text-center" ${thAttr}>${col.label}</th>`;
       }
     });
     theadHtml += `</tr>`;
     document.getElementById('masterTableHead').innerHTML = theadHtml;
 
     setTimeout(() => {
-      let jobTypeMenuHtml = `<li><a class="dropdown-item ${!selectedJobType ? 'active fw-bold' : ''}" href="javascript:void(0)" onclick="setFilter('jobType', '')">Tất cả Công việc (${activeJobTypes.length})</a></li>`;
+      let jobTypeMenuHtml = `<li><a class="dropdown-item ${!selectedJobType ? 'active fw-bold' : ''}" href="javascript:void(0)" onclick="setFilter('jobType', '')">Tất cả (${activeJobTypes.length})</a></li>`;
       activeJobTypes.forEach(jt => {
         const isAct = selectedJobType.toLowerCase() === jt.toLowerCase();
         jobTypeMenuHtml += `<li><a class="dropdown-item ${isAct ? 'active fw-bold' : ''}" href="javascript:void(0)" onclick="setFilter('jobType', '${escapeJsQuotes(jt)}')">${jt}</a></li>`;
@@ -5846,7 +5941,7 @@
       const jtMenu = document.getElementById('menuFilterJobType');
       if (jtMenu) jtMenu.innerHTML = jobTypeMenuHtml;
 
-      let custMenuHtml = `<li><a class="dropdown-item ${!selectedCust ? 'active fw-bold' : ''}" href="javascript:void(0)" onclick="setFilter('customer', '')">Tất cả Khách hàng (${activeCustomers.length})</a></li>`;
+      let custMenuHtml = `<li><a class="dropdown-item ${!selectedCust ? 'active fw-bold' : ''}" href="javascript:void(0)" onclick="setFilter('customer', '')">Tất cả (${activeCustomers.length})</a></li>`;
       activeCustomers.forEach(c => {
         const isAct = selectedCust.toLowerCase() === c.toLowerCase();
         custMenuHtml += `<li><a class="dropdown-item ${isAct ? 'active fw-bold' : ''}" href="javascript:void(0)" onclick="setFilter('customer', '${escapeJsQuotes(c)}')">${c}</a></li>`;
@@ -5854,7 +5949,7 @@
       const cMenu = document.getElementById('menuFilterCustomer');
       if (cMenu) cMenu.innerHTML = custMenuHtml;
 
-      let execMenuHtml = `<li><a class="dropdown-item ${!selectedExecutor ? 'active fw-bold' : ''}" href="javascript:void(0)" onclick="setFilter('executor', '')">Tất cả Người thực hiện (${activeExecutors.length})</a></li>`;
+      let execMenuHtml = `<li><a class="dropdown-item ${!selectedExecutor ? 'active fw-bold' : ''}" href="javascript:void(0)" onclick="setFilter('executor', '')">Tất cả (${activeExecutors.length})</a></li>`;
       activeExecutors.forEach(e => {
         const isAct = selectedExecutor.toLowerCase() === e.toLowerCase();
         execMenuHtml += `<li><a class="dropdown-item ${isAct ? 'active fw-bold' : ''}" href="javascript:void(0)" onclick="setFilter('executor', '${escapeJsQuotes(e)}')">${e}</a></li>`;
@@ -5862,7 +5957,7 @@
       const eMenu = document.getElementById('menuFilterExecutor');
       if (eMenu) eMenu.innerHTML = execMenuHtml;
 
-      let statusMenuHtml = `<li><a class="dropdown-item ${!selectedStatus ? 'active fw-bold' : ''}" href="javascript:void(0)" onclick="setFilter('status', '')">Tất cả Tình trạng (${activeStatuses.length})</a></li>`;
+      let statusMenuHtml = `<li><a class="dropdown-item ${!selectedStatus ? 'active fw-bold' : ''}" href="javascript:void(0)" onclick="setFilter('status', '')">Tất cả (${activeStatuses.length})</a></li>`;
       activeStatuses.forEach(s => {
         const isAct = selectedStatus === s;
         statusMenuHtml += `<li><a class="dropdown-item ${isAct ? 'active fw-bold' : ''}" href="javascript:void(0)" onclick="setFilter('status', '${escapeJsQuotes(s)}')">${s}</a></li>`;
@@ -5870,7 +5965,7 @@
       const sMenu = document.getElementById('menuFilterStatus');
       if (sMenu) sMenu.innerHTML = statusMenuHtml;
 
-      let costStatusMenuHtml = `<li><a class="dropdown-item ${!selectedCostStatus ? 'active fw-bold' : ''}" href="javascript:void(0)" onclick="setFilter('costStatus', '')">Tất cả TT Chi phí (${activeCostStatuses.length})</a></li>`;
+      let costStatusMenuHtml = `<li><a class="dropdown-item ${!selectedCostStatus ? 'active fw-bold' : ''}" href="javascript:void(0)" onclick="setFilter('costStatus', '')">Tất cả (${activeCostStatuses.length})</a></li>`;
       activeCostStatuses.forEach(cs => {
         const isAct = selectedCostStatus === cs;
         costStatusMenuHtml += `<li><a class="dropdown-item ${isAct ? 'active fw-bold' : ''}" href="javascript:void(0)" onclick="setFilter('costStatus', '${escapeJsQuotes(cs)}')">${cs}</a></li>`;
@@ -5881,9 +5976,8 @@
 
     let displayItems = [];
 
-    if (onlyEmptyDays && !isFilteringSpecific && !hideCompleted) {
+    const appendEmptyDaysForMonths = () => {
       const monthsToGenerate = selectedMonth ? [selectedMonth] : sortedMonths;
-      
       monthsToGenerate.forEach(mKey => {
         const [mNum, yNum] = mKey.split('/').map(Number);
         const daysInMonth = new Date(yNum, mNum, 0).getDate();
@@ -5895,7 +5989,12 @@
           const dateObj = new Date(yNum, mNum - 1, d);
           const thuStr = weekdayNames[dateObj.getDay()];
 
-          const jobsOnDate = allJobs.filter(j => j.ngay === fullDateStr && (j.congViec.trim() !== '' || j.khachHang.trim() !== ''));
+          const jobsOnDate = allJobs.filter(j => {
+            if (j.ngay !== fullDateStr) return false;
+            if (String(j.congViec || '').trim() === '' && String(j.khachHang || '').trim() === '') return false;
+            if (selectedAuthCodeFilter && normalizeUsername(j.maDangNhap || '') !== selectedAuthCodeFilter) return false;
+            return true;
+          });
 
           if (jobsOnDate.length === 0) {
             displayItems.push({
@@ -5907,15 +6006,23 @@
           }
         }
       });
+    };
+
+    if (onlyEmptyDays && !isFilteringSpecific) {
+      appendEmptyDaysForMonths();
     } else {
       baseFilteredJobs.forEach(j => {
         if (!matchJT(j) || !matchCust(j) || !matchExec(j) || !matchSt(j) || !matchCostSt(j)) return;
         displayItems.push({ isEmpty: false, job: j, dateStr: j.ngay, thu: j.thu });
       });
+      if (showEmptyDays && !isFilteringSpecific) {
+        appendEmptyDaysForMonths();
+      }
     }
 
     // Tránh trạng thái rỗng không thể khôi phục do bộ lọc nhanh đã lưu từ phiên trước.
     const quickFilterEls = [
+      document.getElementById('toggleShowEmptyDays'),
       document.getElementById('toggleOnlyEmptyDays'),
       document.getElementById('toggleMissingTimeOrAddress'),
       document.getElementById('toggleHideCompleted')
@@ -5961,13 +6068,13 @@
           else if (col.id === 'ngay') html += `<td class="text-center text-nowrap">${item.dateStr}${todayBadge}</td>`;
           else if (col.id === 'congViec') html += `<td class="text-center">-</td>`;
           else if (col.id === 'thoiGian') html += `<td class="text-center">-</td>`;
-          else if (col.id === 'diaChi') html += `<td class="col-address-cell">-</td>`;
+          else if (col.id === 'diaChi') html += `<td class="text-center col-address-cell">-</td>`;
           else if (col.id === 'khachHang') html += `<td class="text-center">-</td>`;
           else if (col.id === 'nguoiThucHien') html += `<td class="text-center">-</td>`;
           else if (col.id === 'tinhTrang') html += `<td class="text-center">-</td>`;
-          else if (col.id === 'giaTri') html += `<td class="text-end">-</td>`;
-          else if (col.id === 'daCoc') html += `<td class="text-end">-</td>`;
-          else if (col.id === 'chiPhi') html += `<td class="text-end">-</td>`;
+          else if (col.id === 'giaTri') html += `<td class="text-center">-</td>`;
+          else if (col.id === 'daCoc') html += `<td class="text-center">-</td>`;
+          else if (col.id === 'chiPhi') html += `<td class="text-center">-</td>`;
           else if (col.id === 'ttChiPhi') html += `<td class="text-center">-</td>`;
           else if (col.id === 'maDangNhap') html += `<td class="text-center">-</td>`;
         });
@@ -6053,7 +6160,7 @@
           } else if (col.id === 'thoiGian') {
             html += `<td class="text-center fw-semibold text-dark">${thoiGianDisplay}</td>`;
           } else if (col.id === 'diaChi') {
-            html += `<td class="text-secondary col-address-cell">${diaChiDisplay}</td>`;
+            html += `<td class="text-center text-secondary col-address-cell">${diaChiDisplay}</td>`;
           } else if (col.id === 'khachHang') {
             html += `<td class="text-center"><span class="customer-badge ${isCustFiltered ? 'active-filter' : ''}" onclick="toggleCustomerFilter('${safeCust}')" title="${isCustFiltered ? 'Bấm lần nữa để bỏ lọc' : 'Bấm để lọc riêng khách hàng này'}">${j.khachHang}</span></td>`;
           } else if (col.id === 'nguoiThucHien') {
@@ -6061,11 +6168,11 @@
           } else if (col.id === 'tinhTrang') {
             html += `<td class="text-center">${statusHtml}</td>`;
           } else if (col.id === 'giaTri') {
-            html += `<td class="text-end text-nowrap cell-money-primary">${gVal.toLocaleString('vi-VN')} đ</td>`;
+            html += `<td class="text-center text-nowrap cell-money-primary">${gVal.toLocaleString('vi-VN')} đ</td>`;
           } else if (col.id === 'daCoc') {
-            html += `<td class="text-end text-nowrap cell-money-secondary">${cCoc.toLocaleString('vi-VN')} đ</td>`;
+            html += `<td class="text-center text-nowrap cell-money-secondary">${cCoc.toLocaleString('vi-VN')} đ</td>`;
           } else if (col.id === 'chiPhi') {
-            html += `<td class="text-end text-nowrap cell-money-secondary">${cVal.toLocaleString('vi-VN')} đ</td>`;
+            html += `<td class="text-center text-nowrap cell-money-secondary">${cVal.toLocaleString('vi-VN')} đ</td>`;
           } else if (col.id === 'ttChiPhi') {
             const currentCostStatus = normalizeCostStatusLabel(j.ttChiPhi);
             const costPillClass = currentCostStatus === 'Đã thanh toán' ? 'status-pill-paid' : 'status-pill-unpaid';
@@ -6115,12 +6222,18 @@
     const mobileCardsEl = document.getElementById('mobileCardsContainer');
     if (mobileCardsEl) {
       let cardsHtml = '';
+      let hasMarkedMobileTodayId = false;
       displayItems.forEach(item => {
         const isToday = (item.dateStr === todayFormatted);
+        let mobileTodayIdAttr = '';
+        if (isToday && !hasMarkedMobileTodayId) {
+          mobileTodayIdAttr = 'id="mobileTodayCard"';
+          hasMarkedMobileTodayId = true;
+        }
         const todayBadge = isToday ? `<span class="badge bg-warning text-dark ms-1">Hôm nay</span>` : '';
         if (item.isEmpty) {
           cardsHtml += `
-            <div class="mobile-job-card ${isToday ? 'card-today' : ''}" style="border-left-color: #cbd5e1; opacity: 0.8;">
+            <div ${mobileTodayIdAttr} class="mobile-job-card ${isToday ? 'card-today' : ''}" style="border-left-color: #cbd5e1; opacity: 0.8;">
               <div class="d-flex justify-content-between align-items-center">
                 <span class="fw-bold text-secondary">${item.thu}, ${item.dateStr} ${todayBadge}</span>
                 <span class="small fst-italic text-muted">Ngày trống lịch</span>
@@ -6157,7 +6270,7 @@
           const safeCust = escapeJsQuotes(j.khachHang || '');
 
           cardsHtml += `
-            <div class="mobile-job-card ${isToday ? 'card-today' : ''}">
+            <div ${mobileTodayIdAttr} class="mobile-job-card ${isToday ? 'card-today' : ''}">
               <div class="d-flex justify-content-between align-items-center mb-2">
                 <div class="d-flex align-items-center gap-1.5">
                   <span class="fw-bold text-dark" style="font-size: 13.5px;">${item.thu}, ${j.ngay}</span>
@@ -7897,6 +8010,7 @@
     currentDisplayName = "";
     isAdminAccount = false;
     adminDefaultFilterInitialized = false;
+    tableMonthInitialized = false;
     selectedAdminAuthFilter = null;
     userExplicitlySelectedAuthFilter = false;
     allJobs = [];
